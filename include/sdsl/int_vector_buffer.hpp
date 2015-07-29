@@ -37,6 +37,7 @@ class int_vector_buffer
 {
     public:
         class iterator;
+        class const_iterator;
         typedef typename int_vector<t_width>::difference_type difference_type;
         typedef typename int_vector<t_width>::value_type      value_type;
 
@@ -291,6 +292,7 @@ class int_vector_buffer
         }
 
         // Forward declaration
+        class const_reference;
         class reference;
 
         //! [] operator
@@ -299,6 +301,10 @@ class int_vector_buffer
          */
         reference operator[](uint64_t idx) {
             return reference(this, idx);
+        }
+
+        const_reference operator[](uint64_t idx)const {
+        	return const_reference(this, idx);
         }
 
         //! Appends the given element value to the end of the int_vector_buffer
@@ -345,7 +351,15 @@ class int_vector_buffer
         iterator end() {
             return iterator(*this, size());
         }
-
+        
+        const_iterator cbegin()const {
+            return const_iterator(*this, 0);
+        }
+        
+        const_iterator cend()const {
+            return const_iterator(*this, size());
+        }
+        
         //! Swap method for int_vector_buffer.
         void swap(int_vector_buffer<t_width>& ivb) {
             if (this != &ivb) {
@@ -371,28 +385,43 @@ class int_vector_buffer
             }
         }
 
-        class reference
+        class const_reference
         {
                 friend class int_vector_buffer<t_width>;
-            private:
+            
+            protected:
                 int_vector_buffer<t_width>* const m_int_vector_buffer = nullptr;
                 uint64_t m_idx = 0;
 
-                reference() {}
+            public:
+                const_reference() {}
 
-                reference(int_vector_buffer<t_width>* _int_vector_buffer, uint64_t _idx) :
+                const_reference(int_vector_buffer<t_width>* _int_vector_buffer, uint64_t _idx) :
                     m_int_vector_buffer(_int_vector_buffer), m_idx(_idx) {}
 
-            public:
-
                 //! Conversion to int for read operations
-                operator uint64_t ()const {
+                operator uint64_t () const {
                     return m_int_vector_buffer->read(m_idx);
                 }
 
+                bool operator==(const reference& x) const {
+                    return (uint64_t)*this == (uint64_t)x;
+                }
+
+                bool operator<(const reference& x) const {
+                    return (uint64_t)*this < (uint64_t)x;
+                }
+        };
+
+        class reference : public const_reference
+        {
+            public:
+                using const_reference::const_reference;
+
                 //! Assignment operator for write operations
                 reference& operator=(const uint64_t& val)     {
-                    m_int_vector_buffer->write(m_idx, val);
+                    typedef const_reference cr;
+                    cr::m_int_vector_buffer->write(cr::m_idx, val);
                     return *this;
                 }
 
@@ -403,8 +432,9 @@ class int_vector_buffer
 
                 //! Prefix increment of the proxy object
                 reference& operator++() {
-                    uint64_t x = m_int_vector_buffer->read(m_idx);
-                    m_int_vector_buffer->write(m_idx, x+1);
+                    typedef const_reference cr;
+                    uint64_t x = cr::m_int_vector_buffer->read(cr::m_idx);
+                    cr::m_int_vector_buffer->write(cr::m_idx, x+1);
                     return *this;
                 }
 
@@ -417,8 +447,9 @@ class int_vector_buffer
 
                 //! Prefix decrement of the proxy object
                 reference& operator--() {
-                    uint64_t x = m_int_vector_buffer->read(m_idx);
-                    m_int_vector_buffer->write(m_idx, x-1);
+                    typedef const_reference cr;
+                    uint64_t x = cr::m_int_vector_buffer->read(cr::m_idx);
+                    cr::m_int_vector_buffer->write(cr::m_idx, x-1);
                     return *this;
                 }
 
@@ -431,98 +462,108 @@ class int_vector_buffer
 
                 //! Add assign from the proxy object
                 reference& operator+=(const uint64_t x) {
-                    uint64_t w = m_int_vector_buffer->read(m_idx);
-                    m_int_vector_buffer->write(m_idx, w+x);
+                    typedef const_reference cr;
+                    uint64_t w = cr::m_int_vector_buffer->read(cr::m_idx);
+                    cr::m_int_vector_buffer->write(cr::m_idx, w+x);
                     return *this;
                 }
 
                 //! Subtract assign from the proxy object
                 reference& operator-=(const uint64_t x) {
-                    uint64_t w = m_int_vector_buffer->read(m_idx);
-                    m_int_vector_buffer->write(m_idx, w-x);
+                    typedef const_reference cr;
+                    uint64_t w = cr::m_int_vector_buffer->read(cr::m_idx);
+                    cr::m_int_vector_buffer->write(cr::m_idx, w-x);
                     return *this;
-                }
-
-                bool operator==(const reference& x)const {
-                    return (uint64_t)*this == (uint64_t)x;
-                }
-
-                bool operator<(const reference& x)const {
-                    return (uint64_t)*this < (uint64_t)x;
                 }
         };
 
-        class iterator: public std::iterator<std::random_access_iterator_tag, value_type, difference_type>
+        class iterator_base: public std::iterator<std::random_access_iterator_tag, value_type, difference_type>
         {
             private:
                 int_vector_buffer<t_width>& m_ivb;
                 uint64_t m_idx = 0;
             public:
 
-                iterator() = delete;
-                iterator(int_vector_buffer<t_width>& ivb, uint64_t idx=0) : m_ivb(ivb), m_idx(idx) {}
+                iterator_base() = delete;
+                iterator_base(int_vector_buffer<t_width>& ivb, uint64_t idx=0) : m_ivb(ivb), m_idx(idx) {}
 
-                iterator& operator++() {
-                    ++m_idx;
+                bool operator==(const iterator_base& it) const {
+                    return &m_ivb == &(it.m_ivb) and m_idx == it.m_idx;
+                }
+
+                bool operator!=(const iterator_base& it) const {
+                    return !(*this == it);
+                }
+
+                inline difference_type operator-(const iterator_base& it) {
+                    return (m_idx - it.m_idx);
+                }
+        };
+
+        template<class t_iterator, class t_reference>
+        class iterator_tpl: public iterator_base
+        {
+            public:
+                using iterator_base::iterator_base;
+
+                t_iterator& operator++() {
+                    typedef iterator_base ib;
+                    ++ib::m_idx;
                     return *this;
                 }
 
-                iterator operator++(int) {
-                    iterator it = *this;
+                t_iterator operator++(int) {
+                    t_iterator it = *this;
                     ++(*this);
                     return it;
                 }
 
-                iterator& operator--() {
-                    --m_idx;
+                t_iterator& operator--() {
+                    typedef iterator_base ib;
+                    --ib::m_idx;
                     return *this;
                 }
 
-                iterator operator--(int) {
-                    iterator it = *this;
+                t_iterator operator--(int) {
+                    t_iterator it = *this;
                     --(*this);
                     return it;
                 }
 
-                reference operator*()const {
-                    return m_ivb[m_idx];
+                t_reference operator*()const {
+                    typedef iterator_base ib;
+                    return ib::m_ivb[ib::m_idx];
                 }
 
-                iterator& operator+=(difference_type i) {
+                t_iterator& operator+=(difference_type i) {
+                    typedef iterator_base ib;
                     if (i<0)
                         return *this -= (-i);
-                    m_idx += i;
+                    ib::m_idx += i;
                     return *this;
                 }
 
-                iterator& operator-=(difference_type i) {
+                t_iterator& operator-=(difference_type i) {
+                    typedef iterator_base ib;
                     if (i<0)
                         return *this += (-i);
-                    m_idx -= i;
+                    ib::m_idx -= i;
                     return *this;
                 }
 
-                iterator operator+(difference_type i) const {
-                    iterator it = *this;
+                t_iterator operator+(difference_type i) const {
+                    t_iterator it = *this;
                     return it += i;
                 }
 
-                iterator& operator-(difference_type i) const {
-                    iterator it = *this;
+                t_iterator& operator-(difference_type i) const {
+                    t_iterator it = *this;
                     return it -= i;
                 }
-
-                bool operator==(const iterator& it) const {
-                    return &m_ivb == &(it.m_ivb) and m_idx == it.m_idx;
-                }
-
-                bool operator!=(const iterator& it) const {
-                    return !(*this == it);
-                }
-                inline difference_type operator-(const iterator& it) {
-                    return (m_idx - it.m_idx);
-                }
         };
+
+        using iterator = iterator_tpl<iterator, reference>;
+        using const_iterator = iterator_tpl<const_iterator, const_reference>;
 };
 
 } // end of namespace
