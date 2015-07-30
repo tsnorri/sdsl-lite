@@ -352,6 +352,17 @@ struct is_regular : std::integral_constant< bool,
         std::is_copy_assignable<T>::value&&
         std::is_move_assignable<T>::value > {};
 
+//==================== Math functions ========================
+//! Power of 2 greater or equal to val.
+template<typename T>
+T upper_power_of_2(T const val);
+
+//! Integer power function.
+uint64_t ipow(uint64_t base, uint64_t exp);
+
+//! Find the smallest divisor of n no smaller than m.
+uint64_t find_divisor(uint64_t n, uint64_t m);
+
 } // end namespace util
 
 //==================== Template functions ====================
@@ -604,6 +615,14 @@ std::string util::to_latex_string(const T& t)
 {
     return to_string(t);
 }
+
+template<typename T>
+T util::upper_power_of_2(T const val)
+{
+	// Adapted from http://graphics.stanford.edu/~seander/bithacks.html#RoundUpPowerOf2
+	return 1 << (std::ceil(std::log2(val)));
+}
+
 
 }// end namespace sdsl
 #endif

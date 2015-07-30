@@ -139,6 +139,32 @@ off_t file_size(const std::string& file)
     }
 }
 
+uint64_t ipow(uint64_t base, uint64_t exp)
+{
+	uint64_t res(1); // x ** 0 = 1.
+	while (exp)
+	{
+		if (1 & exp)
+			res *= base;
+
+		base *= base;
+		exp >>= 1;
+	}
+
+	return res;
+}
+
+uint64_t find_divisor(uint64_t n, uint64_t start)
+{
+	uint64_t lim(std::ceil(std::sqrt(n)));
+	for (uint64_t i(start); i <= lim; ++i)
+	{
+		if (0 == n % i)
+			return i;
+	}
+	return 1;
+}
+
 }// end namespace util
 
 }// end namespace sdsl
