@@ -620,7 +620,7 @@ template<typename T>
 T util::upper_power_of_2(T const val)
 {
 	// Adapted from http://graphics.stanford.edu/~seander/bithacks.html#RoundUpPowerOf2
-	return 1 << (std::ceil(std::log2(val)));
+	return static_cast<T>(1 << static_cast<uint8_t>(std::ceil(std::log2(val))));
 }
 
 
