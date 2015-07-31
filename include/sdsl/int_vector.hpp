@@ -509,6 +509,16 @@ class int_vector
             return int_vector_trait<t_width>::end(this, m_data, (m_size/m_width));
         }
 
+        //! Const iterator that points to the first element of the int_vector.
+        const const_iterator cbegin() const {
+            return int_vector_trait<t_width>::begin(this, m_data);
+        }
+
+        //! Const iterator that points to the element after the last element of int_vector.
+        const const_iterator cend() const {
+            return int_vector_trait<t_width>::end(this, m_data, (m_size/m_width));
+        }
+
         //! Flip all bits of bit_vector
         void flip() {
             static_assert(1 == t_width, "int_vector: flip() is available only for bit_vector.");
