@@ -36,8 +36,12 @@ template<uint8_t t_width=0>
 class int_vector_buffer
 {
     public:
-        class iterator;
-        class const_iterator;
+        class reference;
+        class const_reference;
+        template<class t_reference> class iterator_tpl;
+        using iterator = iterator_tpl<reference>;
+        using const_iterator = iterator_tpl<const_reference>;
+
         typedef typename int_vector<t_width>::difference_type difference_type;
         typedef typename int_vector<t_width>::value_type      value_type;
 
@@ -291,10 +295,6 @@ class int_vector_buffer
             read_block(0);
         }
 
-        // Forward declaration
-        class const_reference;
-        class reference;
-
         //! [] operator
         /*! \param i Index the i-th integer of length width().
          *  \return A reference to the i-th integer of length width().
@@ -352,11 +352,13 @@ class int_vector_buffer
             return iterator(*this, size());
         }
         
-        const_iterator cbegin()const {
+        // Not const because read is not const.
+        const_iterator cbegin() {
             return const_iterator(*this, 0);
         }
         
-        const_iterator cend()const {
+        // Not const because read is not const.
+        const_iterator cend() {
             return const_iterator(*this, size());
         }
         
@@ -385,12 +387,13 @@ class int_vector_buffer
             }
         }
 
+        // The constness of the const_reference is defined s.t. only read operations are allowed.
         class const_reference
         {
                 friend class int_vector_buffer<t_width>;
             
             protected:
-                int_vector_buffer<t_width>* const m_int_vector_buffer = nullptr;
+                int_vector_buffer<t_width>* m_int_vector_buffer = nullptr;
                 uint64_t m_idx = 0;
 
             public:
@@ -400,7 +403,7 @@ class int_vector_buffer
                     m_int_vector_buffer(_int_vector_buffer), m_idx(_idx) {}
 
                 //! Conversion to int for read operations
-                operator uint64_t () const {
+                operator uint64_t () {
                     return m_int_vector_buffer->read(m_idx);
                 }
 
@@ -479,7 +482,7 @@ class int_vector_buffer
 
         class iterator_base: public std::iterator<std::random_access_iterator_tag, value_type, difference_type>
         {
-            private:
+            protected:
                 int_vector_buffer<t_width>& m_ivb;
                 uint64_t m_idx = 0;
             public:
@@ -495,37 +498,43 @@ class int_vector_buffer
                     return !(*this == it);
                 }
 
+                bool operator<(const iterator_base& it) const {
+                    return m_idx < it.m_idx;
+                }
+
                 inline difference_type operator-(const iterator_base& it) {
                     return (m_idx - it.m_idx);
                 }
         };
 
-        template<class t_iterator, class t_reference>
+        template<class t_reference>
         class iterator_tpl: public iterator_base
         {
             public:
+                typedef iterator_tpl<t_reference> iterator_type;
+            public:
                 using iterator_base::iterator_base;
 
-                t_iterator& operator++() {
+                iterator_type& operator++() {
                     typedef iterator_base ib;
                     ++ib::m_idx;
                     return *this;
                 }
 
-                t_iterator operator++(int) {
-                    t_iterator it = *this;
+                iterator_type operator++(int) {
+                    iterator_type it = *this;
                     ++(*this);
                     return it;
                 }
 
-                t_iterator& operator--() {
+                iterator_type& operator--() {
                     typedef iterator_base ib;
                     --ib::m_idx;
                     return *this;
                 }
 
-                t_iterator operator--(int) {
-                    t_iterator it = *this;
+                iterator_type operator--(int) {
+                    iterator_type it = *this;
                     --(*this);
                     return it;
                 }
@@ -535,7 +544,7 @@ class int_vector_buffer
                     return ib::m_ivb[ib::m_idx];
                 }
 
-                t_iterator& operator+=(difference_type i) {
+                iterator_type& operator+=(difference_type i) {
                     typedef iterator_base ib;
                     if (i<0)
                         return *this -= (-i);
@@ -543,7 +552,7 @@ class int_vector_buffer
                     return *this;
                 }
 
-                t_iterator& operator-=(difference_type i) {
+                iterator_type& operator-=(difference_type i) {
                     typedef iterator_base ib;
                     if (i<0)
                         return *this += (-i);
@@ -551,19 +560,17 @@ class int_vector_buffer
                     return *this;
                 }
 
-                t_iterator operator+(difference_type i) const {
-                    t_iterator it = *this;
+                iterator_type operator+(difference_type i) const {
+                    iterator_type it = *this;
                     return it += i;
                 }
 
-                t_iterator& operator-(difference_type i) const {
-                    t_iterator it = *this;
+                iterator_type& operator-(difference_type i) const {
+                    iterator_type it = *this;
                     return it -= i;
                 }
         };
 
-        using iterator = iterator_tpl<iterator, reference>;
-        using const_iterator = iterator_tpl<const_iterator, const_reference>;
 };
 
 } // end of namespace
