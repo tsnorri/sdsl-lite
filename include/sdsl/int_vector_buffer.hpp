@@ -423,8 +423,7 @@ class int_vector_buffer
 
                 //! Assignment operator for write operations
                 reference& operator=(const uint64_t& val)     {
-                    typedef const_reference cr;
-                    cr::m_int_vector_buffer->write(cr::m_idx, val);
+                    this->m_int_vector_buffer->write(this->m_idx, val);
                     return *this;
                 }
 
@@ -435,9 +434,8 @@ class int_vector_buffer
 
                 //! Prefix increment of the proxy object
                 reference& operator++() {
-                    typedef const_reference cr;
-                    uint64_t x = cr::m_int_vector_buffer->read(cr::m_idx);
-                    cr::m_int_vector_buffer->write(cr::m_idx, x+1);
+                    uint64_t x = this->m_int_vector_buffer->read(this->m_idx);
+                    this->m_int_vector_buffer->write(this->m_idx, x+1);
                     return *this;
                 }
 
@@ -450,9 +448,8 @@ class int_vector_buffer
 
                 //! Prefix decrement of the proxy object
                 reference& operator--() {
-                    typedef const_reference cr;
-                    uint64_t x = cr::m_int_vector_buffer->read(cr::m_idx);
-                    cr::m_int_vector_buffer->write(cr::m_idx, x-1);
+                    uint64_t x = this->m_int_vector_buffer->read(this->m_idx);
+                    this->m_int_vector_buffer->write(this->m_idx, x-1);
                     return *this;
                 }
 
@@ -465,17 +462,16 @@ class int_vector_buffer
 
                 //! Add assign from the proxy object
                 reference& operator+=(const uint64_t x) {
-                    typedef const_reference cr;
-                    uint64_t w = cr::m_int_vector_buffer->read(cr::m_idx);
-                    cr::m_int_vector_buffer->write(cr::m_idx, w+x);
+                    uint64_t w = this->m_int_vector_buffer->read(this->m_idx);
+                    this->m_int_vector_buffer->write(this->m_idx, w+x);
                     return *this;
                 }
 
                 //! Subtract assign from the proxy object
                 reference& operator-=(const uint64_t x) {
                     typedef const_reference cr;
-                    uint64_t w = cr::m_int_vector_buffer->read(cr::m_idx);
-                    cr::m_int_vector_buffer->write(cr::m_idx, w-x);
+                    uint64_t w = this->m_int_vector_buffer->read(this->m_idx);
+                    this->m_int_vector_buffer->write(this->m_idx, w-x);
                     return *this;
                 }
         };
@@ -517,7 +513,7 @@ class int_vector_buffer
 
                 iterator_type& operator++() {
                     typedef iterator_base ib;
-                    ++ib::m_idx;
+                    ++this->m_idx;
                     return *this;
                 }
 
@@ -529,7 +525,7 @@ class int_vector_buffer
 
                 iterator_type& operator--() {
                     typedef iterator_base ib;
-                    --ib::m_idx;
+                    --this->m_idx;
                     return *this;
                 }
 
@@ -541,14 +537,14 @@ class int_vector_buffer
 
                 t_reference operator*()const {
                     typedef iterator_base ib;
-                    return ib::m_ivb[ib::m_idx];
+                    return this->m_ivb[this->m_idx];
                 }
 
                 iterator_type& operator+=(difference_type i) {
                     typedef iterator_base ib;
                     if (i<0)
                         return *this -= (-i);
-                    ib::m_idx += i;
+                    this->m_idx += i;
                     return *this;
                 }
 
@@ -556,7 +552,7 @@ class int_vector_buffer
                     typedef iterator_base ib;
                     if (i<0)
                         return *this += (-i);
-                    ib::m_idx -= i;
+                    this->m_idx -= i;
                     return *this;
                 }
 
