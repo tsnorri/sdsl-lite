@@ -387,7 +387,6 @@ class int_vector_buffer
             }
         }
 
-        // The constness of the const_reference is defined s.t. only read operations are allowed.
         class const_reference
         {
                 friend class int_vector_buffer<t_width>;
