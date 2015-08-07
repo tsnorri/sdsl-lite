@@ -403,15 +403,15 @@ class int_vector_buffer
                     m_int_vector_buffer(_int_vector_buffer), m_idx(_idx) {}
 
                 //! Conversion to int for read operations
-                operator uint64_t () {
+                operator uint64_t () const {
                     return m_int_vector_buffer->read(m_idx);
                 }
 
-                bool operator==(const reference& x) const {
+                bool operator==(const_reference const &x) const {
                     return (uint64_t)*this == (uint64_t)x;
                 }
 
-                bool operator<(const reference& x) const {
+                bool operator<(const_reference const &x) const {
                     return (uint64_t)*this < (uint64_t)x;
                 }
         };
