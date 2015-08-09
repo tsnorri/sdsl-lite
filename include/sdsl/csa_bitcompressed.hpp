@@ -102,6 +102,9 @@ class csa_bitcompressed
             m_isa      = csa.m_isa;
             m_alphabet = csa.m_alphabet;
         }
+    private:
+        const auto                                    rank_bwt   = rank_of_csa_psi<csa_bitcompressed>(*this);
+        const auto                                    select_bwt = select_of_csa_psi<csa_bitcompressed>(*this);
     public:
         const typename alphabet_type::char2comp_type& char2comp  = m_alphabet.char2comp;
         const typename alphabet_type::comp2char_type& comp2char  = m_alphabet.comp2char;
@@ -268,58 +271,6 @@ class csa_bitcompressed
         size_type get_sample_dens()const
         {
             return 1;
-        }
-
-    private:
-
-        // Calculates how many symbols c are in the prefix [0..i-1] of the BWT of the original text.
-        /*
-         *  \param i The exclusive index of the prefix range [0..i-1], so \f$i\in [0..size()]\f$.
-         *  \param c The symbol to count the occurrences in the prefix.
-         *    \returns The number of occurrences of symbol c in the prefix [0..i-1] of the BWT.
-         *  \par Time complexity
-         *        \f$ \Order{\log n} \f$
-         */
-        size_type rank_bwt(size_type i, const char_type c) const
-        {
-            // TODO: special case if c == BWT[i-1] we can use LF to get a constant time answer
-            comp_char_type cc = char2comp[c];
-            if (cc==0 and c!=0)  // character is not in the text => return 0
-                return 0;
-            // binary search the interval [C[cc]..C[cc+1]-1] for the result
-            size_type lower_b = C[cc], upper_b = C[((size_type)1)+cc]; // lower_b inclusive, upper_b exclusive
-            while (lower_b+1 < upper_b) {
-                size_type mid = (lower_b+upper_b)/2;
-                if (psi[mid] >= i)
-                    upper_b = mid;
-                else
-                    lower_b = mid;
-            }
-            if (lower_b > C[cc])
-                return lower_b - C[cc] + 1;
-            else { // lower_b == m_C[cc]
-                return psi[lower_b] < i;// 1 if psi[lower_b]<i, 0 otherwise
-            }
-        }
-
-        // Calculates the i-th occurrence of symbol c in the BWT of the original text.
-        /*
-         *  \param i The i-th occurrence. \f$i\in [1..rank(size(),c)]\f$.
-         *  \param c Character c.
-         *    \returns The i-th occurrence of c in the BWT or size() if c does
-         *           not occur t times in BWT>
-         *  \par Time complexity
-         *        \f$ \Order{t_{\Psi}} \f$
-         */
-        size_type select_bwt(size_type i, const char_type c) const
-        {
-            comp_char_type cc = char2comp[c];
-            if (cc==0 and c!=0)  // character is not in the text => return size()
-                return size();
-            if (C[cc]+i-1 <  C[((size_type)1)+cc]) {
-                return psi[C[cc]+i-1];
-            }
-            return size();
         }
 };
 
