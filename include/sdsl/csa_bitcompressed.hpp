@@ -69,6 +69,8 @@ class csa_bitcompressed
         typedef int_vector<>::size_type                         size_type;        // STL Container requirement
         typedef size_type                                       csa_size_type;
         typedef ptrdiff_t                                       difference_type; // STL Container requirement
+        typedef rank_bwt_of_csa_psi<csa_bitcompressed>          rank_bwt_type;
+        typedef select_bwt_of_csa_psi<csa_bitcompressed>        select_bwt_type;
         typedef traverse_csa_saisa<csa_bitcompressed,true>      psi_type;
         typedef traverse_csa_saisa<csa_bitcompressed,false>     lf_type;
         typedef bwt_of_csa_psi<csa_bitcompressed>               bwt_type;
@@ -103,8 +105,8 @@ class csa_bitcompressed
             m_alphabet = csa.m_alphabet;
         }
     private:
-        const auto                                    rank_bwt   = rank_of_csa_psi<csa_bitcompressed>(*this);
-        const auto                                    select_bwt = select_of_csa_psi<csa_bitcompressed>(*this);
+        const rank_bwt_type                           rank_bwt   = rank_bwt_of_csa_psi<csa_bitcompressed>(*this);
+        const select_bwt_type                         select_bwt = select_bwt_of_csa_psi<csa_bitcompressed>(*this);
     public:
         const typename alphabet_type::char2comp_type& char2comp  = m_alphabet.char2comp;
         const typename alphabet_type::comp2char_type& comp2char  = m_alphabet.comp2char;
