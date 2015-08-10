@@ -209,7 +209,7 @@ class traverse_csa_saisa
         //! Returns if the \f$\Psi\f$ function is empty.
         size_type empty()const
         {
-            return m_csa,empty();
+            return m_csa.empty();
         }
 
         //! Returns a const_iterator to the first element.
