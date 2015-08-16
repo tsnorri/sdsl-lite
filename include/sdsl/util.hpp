@@ -363,6 +363,11 @@ uint64_t ipow(uint64_t base, uint64_t exp);
 //! Find the smallest divisor of n no smaller than m.
 uint64_t find_divisor(uint64_t n, uint64_t m);
 
+//! Interpret text at a given position as base-σ.
+template<class t_text_buf, class t_alphabet>
+uint64_t str_to_base_sigma(t_text_buf &text_buf, t_alphabet const &alphabet, uint64_t pos, uint64_t nc);
+
+
 } // end namespace util
 
 //==================== Template functions ====================
@@ -621,6 +626,26 @@ T util::upper_power_of_2(T const val)
 {
 	// Adapted from http://graphics.stanford.edu/~seander/bithacks.html#RoundUpPowerOf2
 	return static_cast<T>(1 << static_cast<uint8_t>(std::ceil(std::log2(val))));
+}
+
+template<class t_text_buf, class t_alphabet>
+uint64_t util::str_to_base_sigma(t_text_buf &text_buf, t_alphabet const &alphabet, uint64_t pos, uint64_t nc)
+{
+    assert(nc <= pos);
+    uint64_t res(0);
+    typename t_text_buf::const_iterator const begin(text_buf.cbegin()), end(begin + pos);
+    auto const power(nc);
+    auto it(end - nc);
+    uint64_t t(1);
+    while (it != end)
+    {
+        auto product(util::ipow(alphabet.sigma, power - t));
+        auto val(alphabet.char2comp[*it] * product);
+        res += val;
+        ++it;
+        ++t;
+    }
+    return res;
 }
 
 
