@@ -96,7 +96,7 @@ namespace sdsl
 		template<typename T> using array = std::vector<T>; // dynarray is not move-assignable, which we need.
 		
 	public:
-		typedef csa_rao<t_spec>																csa_type;
+		typedef csa_rao																		csa_type;
 		typedef uint64_t																	value_type;
 		typedef random_access_const_iterator<csa_type>										const_iterator;
 		typedef const_iterator																iterator;
