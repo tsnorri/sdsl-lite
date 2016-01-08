@@ -517,22 +517,22 @@ class int_vector_buffer
                 iterator_base(int_vector_buffer<t_width>& ivb, uint64_t idx=0) : m_ivb(ivb), m_idx(idx) {}
 
                 bool operator==(const iterator_base& it) const
-				{
+                {
                     return &m_ivb == &(it.m_ivb) and m_idx == it.m_idx;
                 }
 
                 bool operator!=(const iterator_base& it) const
-				{
+                {
                     return !(*this == it);
                 }
 
                 bool operator<(const iterator_base& it) const
-				{
+                {
                     return m_idx < it.m_idx;
                 }
 
                 inline difference_type operator-(const iterator_base& it)
-				{
+                {
                     return (m_idx - it.m_idx);
                 }
         };
@@ -546,38 +546,38 @@ class int_vector_buffer
                 using iterator_base::iterator_base;
 
                 iterator_type& operator++()
-				{
+                {
                     ++this->m_idx;
                     return *this;
                 }
 
                 iterator_type operator++(int)
-				{
+                {
                     iterator_type it = *this;
                     ++(*this);
                     return it;
                 }
 
                 iterator_type& operator--()
-				{
+                {
                     --this->m_idx;
                     return *this;
                 }
 
                 iterator_type operator--(int)
-				{
+                {
                     iterator_type it = *this;
                     --(*this);
                     return it;
                 }
 
                 t_reference operator*()const
-				{
+                {
                     return this->m_ivb[this->m_idx];
                 }
 
                 iterator_type& operator+=(difference_type i)
-				{
+                {
                     if (i<0)
                         return *this -= (-i);
                     this->m_idx += i;
@@ -585,7 +585,7 @@ class int_vector_buffer
                 }
 
                 iterator_type& operator-=(difference_type i)
-				{
+                {
                     if (i<0)
                         return *this += (-i);
                     this->m_idx -= i;
@@ -593,13 +593,13 @@ class int_vector_buffer
                 }
 
                 iterator_type operator+(difference_type i) const
-				{
+                {
                     iterator_type it = *this;
                     return it += i;
                 }
 
                 iterator_type& operator-(difference_type i) const
-				{
+                {
                     iterator_type it = *this;
                     return it -= i;
                 }
