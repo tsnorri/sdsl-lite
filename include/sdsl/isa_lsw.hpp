@@ -65,7 +65,7 @@ namespace sdsl
 	class isa_lsw : public isa_lsw_base<t_r_bit_vector, t_s_bit_vector>
 	{
 	public:
-		typedef isa_lsw<t_csa, t_r_bit_vector, t_s_bit_vector>	isa_type;
+		typedef isa_lsw											isa_type;
 		typedef random_access_const_iterator<isa_type>			const_iterator;
 		typedef typename t_csa::value_type						value_type;
 		typedef typename t_csa::size_type						size_type;
