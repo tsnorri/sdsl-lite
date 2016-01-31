@@ -26,6 +26,7 @@
 #include "rank_support.hpp"
 #include "select_support.hpp"
 #include "wt_helper.hpp"
+#include <array>
 #include <vector>
 #include <utility>
 #include <tuple>
