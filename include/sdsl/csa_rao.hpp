@@ -129,6 +129,14 @@ namespace sdsl
 
 		typedef csa_tag																		index_category;
 		typedef psi_tag																		extract_category;
+
+		// FIXME: Does this make sense? (Affects child() in CST, which calls get_char_pos, which opts
+		// to use Psi instead of SA and ISA, if the densities are high enough. However, this class doesn't
+		// provide a Psi function, so the values are calculated with SA and ISA anyway.)
+		enum {
+			sa_sample_dens = 1,
+			isa_sample_dens = 1
+		};
 	
 		friend class csa_rao_builder<csa_type>;
 		friend typename spec_type::delegate_type;
