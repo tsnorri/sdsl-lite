@@ -211,7 +211,7 @@ namespace sdsl
 		}
 		
 		// (3 (4.3)) Create C_k. Use 1-based indexing for i.
-		c_k_values = std::move(int_vector<64>(1 + l_vec.size(), 0));
+		c_k_values = int_vector<64>(1 + l_vec.size(), 0);
 		
 		{
 			uint64_t sum(0);
