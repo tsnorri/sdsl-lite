@@ -783,7 +783,7 @@ class cst_sada
          *        \f$ \Order{1} \f$ for leaves and \f$ \log n \f$ for inner nodes
          * \sa id(node_type v)
          */
-        size_type inv_id(size_type id)
+        size_type inv_id(size_type id)const
         {
             if (id < size()) {  // the corresponding node is a leaf
                 return select_leaf(id+1);
