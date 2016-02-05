@@ -132,7 +132,8 @@ namespace sdsl
 
 		// FIXME: Does this make sense? (Affects child() in CST, which calls get_char_pos, which opts
 		// to use Psi instead of SA and ISA, if the densities are high enough. However, this class doesn't
-		// provide a Psi function, so the values are calculated with SA and ISA anyway.)
+		// provide a Psi function, so the values are calculated with SA and ISA anyway. Another option would
+		// be to check for a suitable Ψ_k and use it.)
 		enum {
 			sa_sample_dens = 1,
 			isa_sample_dens = 1
