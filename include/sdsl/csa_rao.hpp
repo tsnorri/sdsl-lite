@@ -122,8 +122,8 @@ namespace sdsl
 		typedef typename alphabet_type::string_type											string_type;
 		
 		typedef csa_rao_builder<csa_type>													builder_type;
-		typedef std::remove_const_t<decltype(t_spec::s_levels)>								level_count_type;
-		typedef std::remove_const_t<decltype(t_spec::s_partitions)>							partition_count_type;
+		typedef typename std::remove_const<decltype(t_spec::s_levels)>::type				level_count_type;
+		typedef typename std::remove_const<decltype(t_spec::s_partitions)>::type			partition_count_type;
 		typedef psi_k_support<typename t_spec::r_bit_vector, typename t_spec::s_bit_vector>	psi_k_support_type;
 		typedef t_spec																		spec_type;
 
@@ -272,7 +272,10 @@ namespace sdsl
 		typedef typename level_base::r_bit_vector r_bit_vector;
 		
 	protected:
-		typename level_base::r_bit_vector::rank_1_type m_b_r1_support;
+		typedef typename r_bit_vector::rank_1_type r1_type;
+
+	protected:
+		r1_type m_b_r1_support;
 	
 	public:
 		level(): level_base() {}
@@ -304,7 +307,7 @@ namespace sdsl
 		level &operator=(level &&other) &;
 		psi_k_support_type const &partition(typename array<psi_k_support_type>::size_type i) const { return this->m_partitions[i]; }
 		int_vector<0> const &d_values() const { return this->m_d_values; }
-		auto b_rank_1(typename r_bit_vector::size_type i) const { return m_b_r1_support.rank(i); } // rank in [0, i-1].
+		typename r1_type::size_type b_rank_1(typename r_bit_vector::size_type i) const { return m_b_r1_support.rank(i); } // rank in [0, i-1].
 		
 		auto serialize(std::ostream& out, structure_tree_node *v = nullptr, std::string name = "") const -> size_type;
 		void load(std::istream& in, partition_count_type partition_count);

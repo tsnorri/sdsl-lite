@@ -243,7 +243,7 @@ namespace sdsl
 		t_sa_buf &sa_buf,
 		t_alphabet const &alphabet,
 		t_psi_k_fn &psi_k_fn
-	)
+	) -> psi_k_support_builder<t_csa, t_text_buf, t_sa_buf, t_alphabet, t_psi_k_fn>
 	{
 		psi_k_support_builder<
 			t_csa,

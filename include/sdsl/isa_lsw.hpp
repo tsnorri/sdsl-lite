@@ -304,7 +304,7 @@ namespace sdsl
 		written_bytes += this->m_isa.serialize(out, child, "m_isa");
 		written_bytes += write_member(psi_k_count, child, "psi_k_count");
 		
-		decltype(this->m_psi_k_support::size_type) i(1);
+		typename decltype(this->m_psi_k_support)::size_type i(1);
 		for (auto it(this->m_psi_k_support.cbegin()), end(this->m_psi_k_support.cend()); it != end; ++it)
 		{
 			written_bytes += it->serialize(out, child, "psi_k_" + std::to_string(i));
