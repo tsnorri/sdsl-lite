@@ -44,6 +44,7 @@ class int_vector_buffer
 
         typedef typename int_vector<t_width>::difference_type difference_type;
         typedef typename int_vector<t_width>::value_type      value_type;
+        typedef uint64_t                                      size_type;
 
     private:
         static_assert(t_width <= 64 , "int_vector_buffer: width must be at most 64 bits.");
@@ -53,13 +54,13 @@ class int_vector_buffer
         int_vector<t_width> m_buffer;
         bool                m_need_to_write = false;
         // length of int_vector header in bytes: 0 for plain, 8 for int_vector<t_width> (0 < t_width), 9 for int_vector<0>
-        uint64_t            m_offset     = 0;
-        uint64_t            m_buffersize = 8;    // in elements! m_buffersize*width() must be a multiple of 8!
-        uint64_t            m_size       = 0;    // size of int_vector_buffer
-        uint64_t            m_begin      = 0;    // number in elements
+        size_type           m_offset     = 0;
+        size_type           m_buffersize = 8;    // in elements! m_buffersize*width() must be a multiple of 8!
+        size_type           m_size       = 0;    // size of int_vector_buffer
+        size_type           m_begin      = 0;    // number in elements
 
         //! Read block containing element at index idx.
-        void read_block(const uint64_t idx)
+        void read_block(const size_type idx)
         {
             m_begin = (idx/m_buffersize)*m_buffersize;
             if (m_begin >= m_size) {
@@ -98,7 +99,7 @@ class int_vector_buffer
         }
 
         //! Read value from idx.
-        uint64_t read(const uint64_t idx)
+        uint64_t read(const size_type idx)
         {
             assert(is_open());
             assert(idx < m_size);
@@ -110,7 +111,7 @@ class int_vector_buffer
         }
 
         //! Write value to idx.
-        void write(const uint64_t idx, const uint64_t value)
+        void write(const size_type idx, const uint64_t value)
         {
             assert(is_open());
             // If idx is not in current block, write current block and load needed block
@@ -144,7 +145,7 @@ class int_vector_buffer
          *                    If true the file will be interpreted as plain array with t_width bits per integer.
          *                    In second case (is_plain==true), t_width must be 8, 16, 32 or 64.
          */
-        int_vector_buffer(const std::string filename, std::ios::openmode mode=std::ios::in, const uint64_t buffer_size=1024*1024, const uint8_t int_width=t_width, const bool is_plain=false)
+        int_vector_buffer(const std::string filename, std::ios::openmode mode=std::ios::in, const size_type buffer_size=1024*1024, const uint8_t int_width=t_width, const bool is_plain=false)
         {
             m_filename = filename;
             assert(!(mode&std::ios::app));
@@ -163,7 +164,7 @@ class int_vector_buffer
             m_ifile.open(m_filename, std::ios::in|std::ios::binary);
             assert(m_ifile.good());
             if (mode & std::ios::in) {
-                uint64_t size  = 0;
+                size_type size  = 0;
                 if (is_plain) {
                     m_ifile.seekg(0, std::ios_base::end);
                     size = m_ifile.tellg()*8;
@@ -246,7 +247,7 @@ class int_vector_buffer
         }
 
         //! Returns the number of elements currently stored.
-        uint64_t size() const
+        size_type size() const
         {
             return m_size;
         }
@@ -258,14 +259,14 @@ class int_vector_buffer
         }
 
         //! Returns the buffersize in bytes
-        uint64_t buffersize() const
+        size_type buffersize() const
         {
             assert(m_buffersize*width()%8==0);
             return (m_buffersize*width())/8;
         }
 
         //! Set the buffersize in bytes
-        void buffersize(uint64_t buffersize)
+        void buffersize(size_type buffersize)
         {
             if (0ULL == buffersize)
                 buffersize = 8;
@@ -273,7 +274,7 @@ class int_vector_buffer
             if (0==(buffersize*8)%width()) {
                 m_buffersize = buffersize*8/width(); // m_buffersize might not be multiple of 8, but m_buffersize*width() is.
             } else {
-                uint64_t element_buffersize = (buffersize*8)/width()+1; // one more element than fits into given buffersize in byte
+                size_type element_buffersize = (buffersize*8)/width()+1; // one more element than fits into given buffersize in byte
                 m_buffersize = element_buffersize+7 - (element_buffersize+7)%8; // take next multiple of 8
             }
             m_buffer = int_vector<t_width>(m_buffersize, 0, width());
@@ -316,12 +317,12 @@ class int_vector_buffer
         /*! \param i Index the i-th integer of length width().
          *  \return A reference to the i-th integer of length width().
          */
-        reference operator[](uint64_t idx)
+        reference operator[](size_type idx)
         {
             return reference(this, idx);
         }
 
-        const_reference operator[](uint64_t idx)const {
+        const_reference operator[](size_type idx)const {
         	return const_reference(this, idx);
         }
 
@@ -341,7 +342,7 @@ class int_vector_buffer
                 if (!remove_file) {
                     write_block();
                     if (0 < m_offset) { // in case of int_vector, write header and trailing zeros
-                        uint64_t size = m_size*width();
+                        size_type size = m_size*width();
                         m_ofile.seekp(0, std::ios::beg);
                         int_vector<t_width>::write_header(size, width(), m_ofile);
                         assert(m_ofile.good());
@@ -416,12 +417,12 @@ class int_vector_buffer
             
             protected:
                 int_vector_buffer<t_width>* m_int_vector_buffer = nullptr;
-                uint64_t m_idx = 0;
+                size_type m_idx = 0;
 
             public:
                 const_reference() {}
 
-                const_reference(int_vector_buffer<t_width>* _int_vector_buffer, uint64_t _idx) :
+                const_reference(int_vector_buffer<t_width>* _int_vector_buffer, size_type _idx) :
                     m_int_vector_buffer(_int_vector_buffer), m_idx(_idx) {}
 
                 //! Conversion to int for read operations
@@ -510,11 +511,11 @@ class int_vector_buffer
         {
             protected:
                 int_vector_buffer<t_width>& m_ivb;
-                uint64_t m_idx = 0;
+                size_type m_idx = 0;
             public:
 
                 iterator_base() = delete;
-                iterator_base(int_vector_buffer<t_width>& ivb, uint64_t idx=0) : m_ivb(ivb), m_idx(idx) {}
+                iterator_base(int_vector_buffer<t_width>& ivb, size_type idx=0) : m_ivb(ivb), m_idx(idx) {}
 
                 bool operator==(const iterator_base& it) const
                 {
