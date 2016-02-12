@@ -611,15 +611,7 @@ class cst_sada
             return res;
         }
 
-//! Returns the d-th character (1-based indexing) of the edge-label pointing to v.
-        /*!\param v The node at which the edge path ends.
-         * \param d The position (1-based indexing) of the requested character on the edge path from the root to v. \f$ d > 0 \wedge d <= depth(v) \f$
-         * \return The character at position d on the edge path from the root to v.
-         * \par Time complexity
-         *       \f$ \Order{ \log\sigma + (\saaccess+\isaaccess) } \f$
-         * \pre \f$ 1 \leq d \leq depth(v)  \f$
-         */
-        char_type edge(node_type v, size_type d)const
+        char_type edge_c(node_type v, size_type d)const
         {
             assert(1 <= d);
             assert(d <= depth(v));
@@ -639,10 +631,23 @@ class cst_sada
                     c_end = mid;
                 }
             }
-            return m_csa.comp2char[c_begin-1];
+            return c_begin-1;
         }
 
-//! Calculate the lowest common ancestor (lca) of two nodes v and w of the suffix tree.
+        //! Returns the d-th character (1-based indexing) of the edge-label pointing to v.
+        /*!\param v The node at which the edge path ends.
+         * \param d The position (1-based indexing) of the requested character on the edge path from the root to v. \f$ d > 0 \wedge d <= depth(v) \f$
+         * \return The character at position d on the edge path from the root to v.
+         * \par Time complexity
+         *       \f$ \Order{ \log\sigma + (\saaccess+\isaaccess) } \f$
+         * \pre \f$ 1 \leq d \leq depth(v)  \f$
+         */
+        char_type edge(node_type v, size_type d)const
+        {
+            return m_csa.comp2char[edge_c(v, d)];
+        }
+
+        //! Calculate the lowest common ancestor (lca) of two nodes v and w of the suffix tree.
         /*!
          * \param v The first node for which the lca with the second node should be computed.
          * \param w The second node for which the lca with the first node should be computed.
