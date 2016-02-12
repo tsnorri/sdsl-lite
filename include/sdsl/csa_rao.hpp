@@ -122,6 +122,7 @@ namespace sdsl
 		typedef typename alphabet_type::string_type											string_type;
 		
 		typedef csa_rao_builder<csa_type>													builder_type;
+		typedef int_vector_buffer<alphabet_type::int_width>									text_buffer_type;
 		typedef typename std::remove_const<decltype(t_spec::s_levels)>::type				level_count_type;
 		typedef typename std::remove_const<decltype(t_spec::s_partitions)>::type			partition_count_type;
 		typedef psi_k_support<typename t_spec::r_bit_vector, typename t_spec::s_bit_vector>	psi_k_support_type;
@@ -226,6 +227,9 @@ namespace sdsl
 		partition_count_type partition_count() const { return m_partition_count; }
 		level_count_type level_count() const { return m_level_count; }
 		uint64_t decompress_sa(uint8_t ll, uint64_t val) const;
+
+		static bool can_use_cached_text(cache_config const &config);
+		static typename text_buffer_type::size_type text_min_pad(typename text_buffer_type::size_type initial_size);
 	};
 	
 	
@@ -532,6 +536,38 @@ namespace sdsl
 		uint64_t const a(util::ipow(m_partition_count, ll));
 		uint64_t const retval(a + a * val - 1);
 		return retval;
+	}
+
+
+	template<class t_spec>
+	bool csa_rao<t_spec>::can_use_cached_text(cache_config const &config)
+	{
+		// Return true if determined at runtime.
+		if (0 == t_spec::s_levels && 0 == t_spec::s_partitions)
+			return true;
+
+		// FIXME: handle the case where only one of the above is zero.
+
+		auto const KEY_TEXT(key_text_trait<alphabet_category::WIDTH>::KEY_TEXT);
+		assert(cache_file_exists(KEY_TEXT, config));
+		std::string const text_file(cache_file_name(KEY_TEXT, config));
+		int_vector_buffer<alphabet_type::int_width> text_buf(text_file);
+
+		uint64_t const l_t(util::ipow(t_spec::s_partitions, t_spec::s_levels));
+		auto const n(text_buf.size());
+		return (0 == n % l_t);
+	}
+
+
+	template<class t_spec>
+	auto csa_rao<t_spec>::text_min_pad(typename text_buffer_type::size_type initial_size) -> typename text_buffer_type::size_type
+	{
+		// FIXME: handle the case where either s_levels or s_partitions is zero.
+		uint64_t const l_t(util::ipow(t_spec::s_partitions, t_spec::s_levels));
+		if (l_t > initial_size)
+			return l_t - initial_size;
+		else
+			return (initial_size - initial_size % l_t);
 	}
 } // end namespace sdsl
 #endif

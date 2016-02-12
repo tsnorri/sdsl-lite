@@ -110,6 +110,7 @@ class csa_wt
         typedef typename alphabet_type::comp_char_type             comp_char_type;
         typedef typename alphabet_type::string_type                string_type;
         typedef csa_wt                                             csa_type;
+        typedef int_vector_buffer<alphabet_type::int_width>        text_buffer_type;
 
         typedef csa_tag                                            index_category;
         typedef lf_tag                                             extract_category;
@@ -258,6 +259,9 @@ class csa_wt
         /*! \param in Input stream to load the data structure from.
          */
         void load(std::istream& in);
+
+        static bool can_use_cached_text(cache_config const &config) { return true; }
+        static typename text_buffer_type::size_type text_min_pad(typename text_buffer_type::size_type initial_size) { return 0; }
 
     private:
 

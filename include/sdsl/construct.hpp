@@ -45,10 +45,11 @@ bool contains_no_zero_symbol(const int_vector& text, const std::string& file)
 }
 
 template<class int_vector>
-void append_zero_symbol(int_vector& text)
+void append_zero_symbol(int_vector& text, typename int_vector::size_type count)
 {
-    text.resize(text.size()+1);
-    text[text.size()-1] = 0;
+    text.resize(text.size() + count);
+    for (typename int_vector::size_type i(0); i < count; ++i)
+        text[text.size() - i - 1] = 0;
 }
 
 
@@ -119,13 +120,20 @@ void construct(t_index& idx, const std::string& file, cache_config& config, uint
     typedef int_vector<t_index::alphabet_category::WIDTH> text_type;
     {
         auto event = memory_monitor::event("parse input text");
-        // (1) check, if the text is cached
+        // (1) check, if the text is cached and usable
+        if (cache_file_exists(KEY_TEXT, config) && !t_index::can_use_cached_text(config)) {
+            unregister_cache_file(KEY_TEXT, config);
+            unregister_cache_file(conf::KEY_SA, config);
+            unregister_cache_file(KEY_BWT, config);
+        }
+
         if (!cache_file_exists(KEY_TEXT, config)) {
             text_type text;
             load_vector_from_file(text, file, num_bytes);
             if (contains_no_zero_symbol(text, file)) {
-                append_zero_symbol(text);
-                store_to_cache(text,KEY_TEXT, config);
+                typename text_type::size_type text_min_pad(t_index::text_min_pad(1 + text.size()));
+                append_zero_symbol(text, 1 + text_min_pad);
+                store_to_cache(text, KEY_TEXT, config);
             }
         }
         register_cache_file(KEY_TEXT, config);
@@ -155,6 +163,7 @@ void construct(t_index& idx, const std::string& file, cache_config& config, uint
     if (config.delete_files) {
         auto event = memory_monitor::event("delete temporary files");
         util::delete_all_files(config.file_map);
+        util::delete_all_files(config.unregistered_files);
     }
 }
 
@@ -206,6 +215,7 @@ void construct(t_index& idx, const std::string& file, cache_config& config, uint
     if (config.delete_files) {
         auto event = memory_monitor::event("delete temporary files");
         util::delete_all_files(config.file_map);
+        util::delete_all_files(config.unregistered_files);
     }
 }
 
@@ -265,6 +275,7 @@ void construct(t_index& idx, const std::string& file, cache_config& config, uint
     if (config.delete_files) {
         auto event = memory_monitor::event("delete temporary files");
         util::delete_all_files(config.file_map);
+        util::delete_all_files(config.unregistered_files);
     }
 }
 
