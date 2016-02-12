@@ -96,6 +96,12 @@ std::string cache_file_name(const std::string& key, const cache_config& config)
     return config.dir+"/"+key+"_"+config.id+".sdsl";
 }
 
+void unregister_cache_file(const std::string& key, cache_config& config)
+{
+    std::string file_name(cache_file_name(key, config));
+    config.file_map.erase(file_name);
+}
+
 void register_cache_file(const std::string& key, cache_config& config)
 {
     std::string file_name = cache_file_name(key, config);
@@ -104,7 +110,6 @@ void register_cache_file(const std::string& key, cache_config& config)
         config.file_map[key] = file_name;
     }
 }
-
 
 bool cache_file_exists(const std::string& key, const cache_config& config)
 {
