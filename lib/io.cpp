@@ -99,7 +99,8 @@ std::string cache_file_name(const std::string& key, const cache_config& config)
 void unregister_cache_file(const std::string& key, cache_config& config)
 {
     std::string file_name(cache_file_name(key, config));
-    config.file_map.erase(file_name);
+    if (config.file_map.erase(file_name))
+        config.unregistered_files.emplace(file_name);
 }
 
 void register_cache_file(const std::string& key, cache_config& config)
@@ -108,6 +109,7 @@ void register_cache_file(const std::string& key, cache_config& config)
     isfstream in(file_name);
     if (in) {  // if file exists, register it.
         config.file_map[key] = file_name;
+        config.unregistered_files.erase(file_name);
     }
 }
 

@@ -256,6 +256,7 @@ std::string to_latex_string(unsigned char c);
 
 //! Delete all files of the file_map.
 void delete_all_files(tMSS& file_map);
+void delete_all_files(std::set<std::string> &);
 
 // thanks to Stefan Arnold for the assign functions
 //! Assigns the value x of type T to the value of y of type U.

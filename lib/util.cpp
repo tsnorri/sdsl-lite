@@ -150,6 +150,14 @@ void delete_all_files(tMSS& file_map)
     file_map.clear();
 }
 
+void delete_all_files(std::set<std::string> &files)
+{
+    for (auto const &fname : files) {
+        sdsl::remove(fname);
+    }
+    files.clear();
+}
+
 std::string to_latex_string(unsigned char c)
 {
     if (c == '_')
