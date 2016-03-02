@@ -143,6 +143,7 @@ namespace sdsl
 		friend class csa_rao_builder<csa_type>;
 		friend typename spec_type::delegate_type;
 		friend isa_type;
+		friend class bwt_of_csa_psi<csa_type>;
 		friend class traverse_csa_saisa<csa_type, true>;
 		friend class traverse_csa_saisa<csa_type, false>;
 		
@@ -353,7 +354,7 @@ namespace sdsl
 		
 		written_bytes += this->m_b_values.serialize(out, child, "m_b_values");
 		written_bytes += this->m_d_values.serialize(out, child, "m_d_values");
-		written_bytes += m_b_r1_support(out, child, "m_b_r1_support");
+		written_bytes += m_b_r1_support.serialize(out, child, "m_b_r1_support");
 		
 		structure_tree::add_size(child, written_bytes);
 		return written_bytes;
@@ -497,8 +498,8 @@ namespace sdsl
 
 		written_bytes += m_sa.serialize(out, child, "m_sa");
 		written_bytes += m_alphabet.serialize(out, child, "m_alphabet");
-		written_bytes += write_member(m_level_count, child, "m_level_count");
-		written_bytes += write_member(m_partition_count, child, "m_partition_count");
+		written_bytes += write_member(m_level_count, out, child, "m_level_count");
+		written_bytes += write_member(m_partition_count, out, child, "m_partition_count");
 		
 		level_count_type i(1);
 		for (auto it(m_levels.cbegin()), end(m_levels.cend()); it != end; ++it)
@@ -524,7 +525,7 @@ namespace sdsl
 		
 		m_levels.resize(m_level_count);
 		for (decltype(m_level_count) i(0); i < m_level_count; ++i)
-			m_levels[i].load(in);
+			m_levels[i].load(in, m_partition_count);
 		
 		m_isa.load(in);
 	}

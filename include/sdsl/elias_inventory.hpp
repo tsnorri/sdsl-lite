@@ -212,9 +212,9 @@ namespace sdsl {
 		
 		written_bytes += this->m_values_high.serialize(out, child, "m_values_high");
 		written_bytes += this->m_values_low.serialize(out, child, "m_values_low");
-		written_bytes += write_member(this->m_max, child, "m_max");
-		written_bytes += write_member(this->m_low_bits, child, "m_low_bits");
-		written_bytes += m_values_high_s1_support(out, child, "m_values_high_s1_support");
+		written_bytes += write_member(this->m_max, out, child, "m_max");
+		written_bytes += write_member(this->m_low_bits, out, child, "m_low_bits");
+		written_bytes += m_values_high_s1_support.serialize(out, child, "m_values_high_s1_support");
 	
 		structure_tree::add_size(child, written_bytes);
 		return written_bytes;
@@ -229,7 +229,7 @@ namespace sdsl {
 		read_member(this->m_max, in);
 		read_member(this->m_low_bits, in);
 		m_values_high_s1_support.load(in);
-		m_values_high_s1_support.set_vector(this->m_values_high);
+		m_values_high_s1_support.set_vector(&this->m_values_high);
 	}
 }
 

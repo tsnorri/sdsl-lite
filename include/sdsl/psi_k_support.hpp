@@ -166,7 +166,7 @@ namespace sdsl
 		
 		written_bytes += this->m_v_values.serialize(out, child, "m_v_values");
 		written_bytes += this->m_psi_k_values.serialize(out, child, "m_psi_k_values");
-		written_bytes += m_v_values_r1_support(out, child, "m_v_values_r1_support");
+		written_bytes += m_v_values_r1_support.serialize(out, child, "m_v_values_r1_support");
 	
 		structure_tree::add_size(child, written_bytes);
 		return written_bytes;
@@ -179,7 +179,7 @@ namespace sdsl
 		this->m_v_values.load(in);
 		this->m_psi_k_values.load(in);
 		m_v_values_r1_support.load(in);
-		m_v_values_r1_support.set_vector(this->m_v_values);
+		m_v_values_r1_support.set_vector(&this->m_v_values);
 	}
 }
 

@@ -302,7 +302,7 @@ namespace sdsl
 		auto psi_k_count(this->m_psi_k_support.size());
 
 		written_bytes += this->m_isa.serialize(out, child, "m_isa");
-		written_bytes += write_member(psi_k_count, child, "psi_k_count");
+		written_bytes += write_member(psi_k_count, out, child, "psi_k_count");
 		
 		typename decltype(this->m_psi_k_support)::size_type i(1);
 		for (auto it(this->m_psi_k_support.cbegin()), end(this->m_psi_k_support.cend()); it != end; ++it)
