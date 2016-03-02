@@ -157,13 +157,17 @@ namespace sdsl
 			std::map<uint64_t, std::vector<uint64_t>> l_map_tmp;
 			
 			// The i values by list index j, i.e. which L list stores the Ψ_k(i).
-			std::unordered_multimap<uint64_t, uint64_t> l_k_values_tmp;
+			// unordered_multimap is much slower in practice.
+			std::multimap<uint64_t, uint64_t> l_k_values_tmp;
 			
 			for (uint64_t i(0), count(m_sa_buf.size()); i < count; ++i)
 			{
 				typename psi_k_index<t_sa_buf>::value_type psi_k_i(0);
 				uint64_t j(0);
-				if (delegate.psi_k(*this, partition, i, psi_k_i, j))
+				
+				// psi_k_i and j are out-paramteres.
+				bool const status(delegate.psi_k(*this, partition, i, psi_k_i, j));
+				if (status)
 				{
 					v_values[i] = 1;
 					
@@ -174,6 +178,15 @@ namespace sdsl
 				}
 			}
 			
+#ifndef NDEBUG
+			// l_k_j.first yields j, .second gives the list L^k_j.
+			for (auto const &l_k_j : l_map_tmp)
+			{
+				auto begin(l_k_j.second.cbegin()), end(l_k_j.second.cend()), it(std::is_sorted_until(begin, end));
+				assert (end == it);
+			}
+#endif
+			
 			// Re-map and invert the l_k_values_tmp index.
 			// Since the lists are numbered non-consequtively, we also re-map their indices to be able to use C_k
 			// (as only the sizes of the non-empty lists are stored).
@@ -182,10 +195,10 @@ namespace sdsl
 			uint64_t ii(0);
 			uint64_t prev_j(0);
 			uint64_t rep_j(0);
-			for (auto l_it(l_map_tmp.begin()), l_end(l_map_tmp.end()); l_it != l_end; ++l_it)
+			for (auto &l_k_j : l_map_tmp)
 			{
-				// l_it->first gives the list index j.
-				auto const j_val(l_it->first);
+				// l_k_j.first yields j, .second gives the list L^k_j.
+				auto const j_val(l_k_j.first);
 				
 				// Replace j_val. Handle the case in which j_val = 0.
 				if (1 + j_val != prev_j)
@@ -194,7 +207,7 @@ namespace sdsl
 					++rep_j;
 				}
 				
-				l_vec.emplace_back(std::move(l_it->second)); // l_it->second gives a vector of values of Ψ_k.
+				l_vec.emplace_back(std::move(l_k_j.second)); // l_k_j.second gives a vector of values of Ψ_k.
 				auto range(l_k_values_tmp.equal_range(j_val)); // Returns a range containing all elements with the given key in the container.
 				for (auto kv_it(range.first); kv_it != range.second; ++kv_it)
 				{

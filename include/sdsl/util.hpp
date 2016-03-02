@@ -642,8 +642,8 @@ std::string util::to_latex_string(const T& t)
 template<typename T>
 T util::upper_power_of_2(T const val)
 {
-	// Adapted from http://graphics.stanford.edu/~seander/bithacks.html#RoundUpPowerOf2
-	return static_cast<T>(1 << static_cast<uint8_t>(std::ceil(std::log2(val))));
+    // Adapted from http://graphics.stanford.edu/~seander/bithacks.html#RoundUpPowerOf2
+    return static_cast<T>(1 << static_cast<uint8_t>(std::ceil(std::log2(val))));
 }
 
 template<class t_text_buf, class t_alphabet>
@@ -653,13 +653,16 @@ uint64_t util::str_to_base_sigma(t_text_buf &text_buf, t_alphabet const &alphabe
     uint64_t res(0);
     typename t_text_buf::const_iterator const begin(text_buf.cbegin()), end(begin + pos);
     auto const power(nc);
+    auto const sigma(alphabet.sigma);
     auto it(end - nc);
     uint64_t t(1);
     while (it != end)
     {
-        auto product(util::ipow(alphabet.sigma, power - t));
-        auto val(alphabet.char2comp[*it] * product);
-        res += val;
+        auto const product(util::ipow(sigma, power - t));
+        auto const c(*it);
+        auto const val(alphabet.char2comp[c]);
+        auto const conv(val * product);
+        res += conv;
         ++it;
         ++t;
     }

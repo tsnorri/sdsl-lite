@@ -78,11 +78,15 @@ namespace sdsl
 	
 	protected:
 		template <class t_builder, class t_sa_buf>
-		struct psi_k_support_builder_delegate
+		class psi_k_support_builder_delegate
 		{
+		protected:
 			uint64_t m_l{0};
 			uint64_t m_kc_max{0};
-			
+		
+		public:
+			psi_k_support_builder_delegate(uint64_t const l): m_l(l) {}
+			void set_kc_max(uint64_t kc_max) { m_kc_max = kc_max; }
 			int_vector<0>::size_type stored_count(t_builder &builder, uint32_t partition);
 			uint8_t stored_width(t_builder &builder, uint32_t partition);
 			
@@ -237,10 +241,10 @@ namespace sdsl
 			this->m_psi_k_support.reserve(l - 1);
 			auto builder(construct_psi_k_support_builder(m_csa, text_buf, sa_buf, m_csa.m_alphabet, psi_k_fn));
 			
-			psi_k_support_builder_delegate<decltype(builder), decltype(sa_buf)> delegate{l};
+			psi_k_support_builder_delegate<decltype(builder), decltype(sa_buf)> delegate(l);
 			for (uint64_t k(1); k < l; ++k)
 			{
-				delegate.m_kc_max = util::ipow(m_csa.m_alphabet.sigma, k) - 1;
+				delegate.set_kc_max(util::ipow(m_csa.m_alphabet.sigma, k) - 1);
 				
 				psi_k_support_type psi_k_support;
 				builder.build(psi_k_support, k, delegate);
@@ -302,7 +306,7 @@ namespace sdsl
 		auto psi_k_count(this->m_psi_k_support.size());
 
 		written_bytes += this->m_isa.serialize(out, child, "m_isa");
-		written_bytes += write_member(psi_k_count, child, "psi_k_count");
+		written_bytes += write_member(psi_k_count, out, child, "psi_k_count");
 		
 		typename decltype(this->m_psi_k_support)::size_type i(1);
 		for (auto it(this->m_psi_k_support.cbegin()), end(this->m_psi_k_support.cend()); it != end; ++it)

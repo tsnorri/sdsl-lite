@@ -48,14 +48,23 @@ namespace sdsl
 		friend typename t_csa_rao::spec_type::delegate_type;
 		
 		template <class t_builder, class t_sa_buf>
-		struct psi_k_support_builder_delegate
+		class psi_k_support_builder_delegate
 		{
+		protected:
 			int_vector<0> const &m_d_values;
 			uint8_t const m_ll{0};
 			
 			// Maximum value for the k * m_partition_count^current_level symbols in the pattern in base-σ.
 			uint64_t m_kc_max{0};
 			
+		public:
+			psi_k_support_builder_delegate(int_vector<0> const &d_values, uint8_t ll):
+				m_d_values(d_values),
+				m_ll(ll)
+			{
+			}
+			
+			void set_kc_max(uint64_t kc_max) { m_kc_max = kc_max; }
 			int_vector<0>::size_type stored_count(t_builder &builder, uint32_t partition);
 	 		uint8_t stored_width(t_builder &builder, uint32_t partition);
 			bool psi_k(t_builder &builder, uint32_t partition, uint64_t i, typename psi_k_index<t_sa_buf>::value_type &psi_k, uint64_t &j);
@@ -145,7 +154,10 @@ namespace sdsl
 		int_vector_buffer<> sa_buf_tmp(cache_file_name(KEY_SA, m_config));
 		
 		m_text_buf = std::move(text_buf_tmp);
+		
+		// FIXME: this should be memory-mapped, too?
 		m_sa_buf = std::move(sa_buf_tmp);
+		m_sa_buf.buffersize(8 * 1024 * 1024);
 	}
 	
 	
@@ -229,10 +241,12 @@ namespace sdsl
 
 		// Calculate j for L^k_j in Lemma 3, i.e. the value in base-σ of the
 		// k * m_partition_count^current_level symbols that appear before SA[Ψ_k(i)].
-		auto pos(builder.sa_buf()[psi_k - 1]); // psi_k_fn returns 1-based indices.
+		auto const pos(builder.sa_buf()[psi_k - 1]); // psi_k_fn returns 1-based indices.
+		auto decompressed_pos(builder.csa().decompress_sa(m_ll, pos));
 		auto const nc(partition * util::ipow(builder.csa().m_partition_count, m_ll));
-		j = util::str_to_base_sigma(builder.text_buf(), builder.csa().m_alphabet, builder.csa().decompress_sa(m_ll, pos), nc);
-
+		// decompressed_pos won't be included.
+		j = util::str_to_base_sigma(builder.text_buf(), builder.csa().m_alphabet, decompressed_pos, nc);
+		
 		assert(j <= m_kc_max);
 		
 		return true;
@@ -253,7 +267,7 @@ namespace sdsl
 		psi_k_index<t_sa_buf_type> psi_k_fn(m_config, sa_buf);
 		
 		uint64_t const n(sa_buf.size());
-		std::vector<typename t_csa_rao::alphabet_type::comp_char_type> sa_ll; // SA_n, calculated with 1-based indices.
+		std::vector<typename t_sa_buf_type::value_type> sa_ll; // SA_n, calculated with 1-based indices.
 	
 		bit_vector b_values(n, 0);
 		int_vector<0> d_values(n, 0, m_d_size);	// l − (SA[i] mod l), indices 0-based, SA[i] 1-based (3 (3)).
@@ -266,11 +280,12 @@ namespace sdsl
 			for (auto it(sa_buf.cbegin()), end(sa_buf.cend()); it != end; ++it)
 			{
 				// Change to 1-based.
-				auto val(*it + 1);
+				auto const val(*it + 1);
 				if (0 == (val % m_csa.m_partition_count))
 				{
 					auto div(val / m_csa.m_partition_count);
 					assert(div);
+					assert(div - 1 <= std::numeric_limits<typename decltype(sa_ll)::value_type>::max());
 					sa_ll.push_back(div - 1);
 					b_values[j] = 1;
 				}
@@ -284,16 +299,16 @@ namespace sdsl
 		// m_sa may still be used via sa_buf.
 		{
 			auto builder(construct_psi_k_support_builder(m_csa, m_text_buf, sa_buf, m_csa.m_alphabet, psi_k_fn));
-			psi_k_support_builder_delegate<decltype(builder), decltype(sa_buf)> delegate{d_values, ll};
+			psi_k_support_builder_delegate<decltype(builder), decltype(sa_buf)> delegate(d_values, ll);
 		
 			for (uint64_t k(1); k < m_csa.m_partition_count; ++k)
 			{
 				// Maximum value for the k * m_partition_count^current_level symbols in base-σ.
 				// (Similar to the maximum of “the value in binary of the k symbols”).
-				delegate.m_kc_max = util::ipow(
+				delegate.set_kc_max(util::ipow(
 					m_csa.m_alphabet.sigma,
 					k * util::ipow(m_csa.m_partition_count, ll)
-				) - 1;
+				) - 1);
 			
 				psi_k_support_type psi_k_support;
 				builder.build(psi_k_support, k, delegate);
@@ -305,7 +320,8 @@ namespace sdsl
 				partitions.emplace_back(std::move(psi_k_support));
 			}
 		}
-	
+		
+		assert(partitions.size() == m_csa.m_partition_count - 1);
 		typename t_csa_rao::level level(partitions, b_values, d_values);
 	
 		m_csa.m_sa.resize(sa_ll.size()); // Shrinks.

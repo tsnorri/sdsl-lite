@@ -142,6 +142,7 @@ namespace sdsl
 		friend class csa_rao_builder<csa_type>;
 		friend typename spec_type::delegate_type;
 		friend isa_type;
+		friend class bwt_of_csa_psi<csa_type>;
 		friend class traverse_csa_saisa<csa_type, true>;
 		friend class traverse_csa_saisa<csa_type, false>;
 		
@@ -308,6 +309,7 @@ namespace sdsl
 		psi_k_support_type const &partition(typename array<psi_k_support_type>::size_type i) const { return this->m_partitions[i]; }
 		int_vector<0> const &d_values() const { return this->m_d_values; }
 		typename r1_type::size_type b_rank_1(typename r_bit_vector::size_type i) const { return m_b_r1_support.rank(i); } // rank in [0, i-1].
+		partition_count_type partition_count() const { return this->m_partitions.size(); }
 		
 		auto serialize(std::ostream& out, structure_tree_node *v = nullptr, std::string name = "") const -> size_type;
 		void load(std::istream& in, partition_count_type partition_count);
@@ -341,15 +343,15 @@ namespace sdsl
 		size_type written_bytes(0);
 		
 		partition_count_type i(1);
-		for (auto it(this->m_partitions.cbegin()), end(this->m_partitions.cend()); it != end; ++it)
+		for (auto const &partition : this->m_partitions)
 		{
-			written_bytes += it->serialize(out, child, "partition_" + std::to_string(i));
+			written_bytes += partition.serialize(out, child, "partition_" + std::to_string(i));
 			++i;
 		}
 		
 		written_bytes += this->m_b_values.serialize(out, child, "m_b_values");
 		written_bytes += this->m_d_values.serialize(out, child, "m_d_values");
-		written_bytes += m_b_r1_support(out, child, "m_b_r1_support");
+		written_bytes += m_b_r1_support.serialize(out, child, "m_b_r1_support");
 		
 		structure_tree::add_size(child, written_bytes);
 		return written_bytes;
@@ -360,7 +362,7 @@ namespace sdsl
 	void csa_rao<t_spec>::level::load(std::istream &in, partition_count_type partition_count)
 	{
 		this->m_partitions.resize(partition_count);
-		for (decltype(partition_count) i(0); i < partition_count; ++i)
+		for (decltype(partition_count) i(0); i < partition_count - 1; ++i)
 			this->m_partitions[i].load(in);
 		
 		this->m_b_values.load(in);
@@ -490,16 +492,18 @@ namespace sdsl
 	{
 		structure_tree_node *child(structure_tree::add_child(v, name, util::class_name(*this)));
 		size_type written_bytes(0);
-
+		
 		written_bytes += m_sa.serialize(out, child, "m_sa");
 		written_bytes += m_alphabet.serialize(out, child, "m_alphabet");
-		written_bytes += write_member(m_level_count, child, "m_level_count");
-		written_bytes += write_member(m_partition_count, child, "m_partition_count");
+		written_bytes += write_member(m_level_count, out, child, "m_level_count");
+		written_bytes += write_member(m_partition_count, out, child, "m_partition_count");
 		
 		level_count_type i(1);
-		for (auto it(m_levels.cbegin()), end(m_levels.cend()); it != end; ++it)
+		assert(m_levels.size() == m_level_count);
+		for (auto const &level : m_levels)
 		{
-			written_bytes += it->serialize(out, child, "level_" + std::to_string(i));
+			assert(level.partition_count() == m_partition_count - 1);
+			written_bytes += level.serialize(out, child, "level_" + std::to_string(i));
 			++i;
 		}
 		
@@ -520,8 +524,8 @@ namespace sdsl
 		
 		m_levels.resize(m_level_count);
 		for (decltype(m_level_count) i(0); i < m_level_count; ++i)
-			m_levels[i].load(in);
-		
+			m_levels[i].load(in, m_partition_count);
+
 		m_isa.load(in);
 	}
 	

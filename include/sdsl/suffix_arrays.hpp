@@ -27,7 +27,10 @@
 
 #include "csa_bitcompressed.hpp"
 #include "csa_wt.hpp"
+#include "csa_rao.hpp"
+#include "csa_rao_builder.hpp"
 #include "csa_sada.hpp"
+#include "isa_lsw.hpp"
 #include "wavelet_trees.hpp"
 #include "construct.hpp"
 #include "suffix_array_algorithm.hpp"
