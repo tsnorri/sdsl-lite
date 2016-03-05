@@ -470,6 +470,12 @@ class int_vector
         {
             int_vector_trait<t_width>::set_width(new_width, m_width);
         }
+	
+        //! Maximum value that can be stored by the vector.
+        uint64_t max_value()
+        {
+            return (0xFFFFFFFFFFFFFFFF >> (64 - (0 == t_width ? m_width : t_width)));
+        }
 
         // Write data (without header) to a stream.
         size_type write_data(std::ostream& out) const;

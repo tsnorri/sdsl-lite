@@ -246,6 +246,11 @@ class int_vector_buffer
             return m_buffer.width();
         }
 
+        uint64_t max_value()
+        {
+            return m_buffer.max_value();
+        }
+
         //! Returns the number of elements currently stored.
         size_type size() const
         {

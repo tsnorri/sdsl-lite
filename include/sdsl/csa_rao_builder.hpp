@@ -290,7 +290,9 @@ namespace sdsl
 					b_values[j] = 1;
 				}
 			
-				d_values[j] = m_csa.m_partition_count - (val % m_csa.m_partition_count);
+				auto const d_val(m_csa.m_partition_count - (val % m_csa.m_partition_count));
+				assert(d_val <= d_values.max_value());
+				d_values[j] = d_val;
 				++j;
 			}
 		}

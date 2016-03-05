@@ -173,6 +173,10 @@ namespace sdsl
 					
 					// Insert Ψ_k(i) into L^k_j. The lists end up sorted (Lemma 3).
 					// Also store i into an inverted index.
+					assert(j <= std::numeric_limits<decltype(l_map_tmp)::key_type>::max());
+					assert(psi_k_i <= std::numeric_limits<decltype(l_map_tmp)::mapped_type::value_type>::max());
+					assert(j <= std::numeric_limits<decltype(l_k_values_tmp)::key_type>::max());
+					assert(i <= std::numeric_limits<decltype(l_k_values_tmp)::mapped_type>::max());
 					l_map_tmp[j].push_back(psi_k_i);
 					l_k_values_tmp.emplace(j, i);
 				}
@@ -212,6 +216,7 @@ namespace sdsl
 				for (auto kv_it(range.first); kv_it != range.second; ++kv_it)
 				{
 					// kv_it->second gives the value of i. Consequtive indices are needed, though.
+					assert((rep_j - 1) <= l_k_values.max_value());
 					l_k_values[ii] = rep_j - 1; // rep_j starts from 1.
 					++ii;
 				}
@@ -231,6 +236,7 @@ namespace sdsl
 			for (uint64_t i(0), count(l_vec.size()); i < count; ++i)
 			{
 				sum += l_vec[i].size();
+				assert(sum <= c_k_values.max_value());
 				c_k_values[1 + i] = sum;
 			}
 		}
