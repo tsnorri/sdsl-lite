@@ -44,7 +44,8 @@ namespace sdsl
 		{
 			std::string tmp_key(util::to_string(util::pid()) + "_Psi_k_idx_" + util::to_string(util::id()));
 			std::string tmp_file_name(cache_file_name(tmp_key, config));
-			int_vector_buffer<0> psi_idx_tmp(tmp_file_name, std::ios::out, 1024 * 1024, m_sa_buf.width());
+			// FIXME: use int_vector_mapper instead.
+			int_vector_buffer<0> psi_idx_tmp(tmp_file_name, std::ios::out, 16 * 1024 * 1024, m_sa_buf.width());
 		
 			for (uint64_t i(0), count(m_sa_buf.size()); i < count; ++i)
 				psi_idx_tmp[m_sa_buf[i]] = i;
