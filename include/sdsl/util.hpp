@@ -25,6 +25,7 @@
 #include "sfstream.hpp"
 #include "ram_fs.hpp"
 #include "config.hpp"  // for constants
+#include "uint128_t.hpp"
 #include <iosfwd>      // forward declaration of ostream
 #include <stdint.h>    // for uint64_t uint32_t declaration
 #include <cassert>
@@ -376,12 +377,17 @@ T upper_power_of_2(T const val);
 //! Integer power function.
 uint64_t ipow(uint64_t base, uint64_t exp);
 
+#ifdef MODE_TI
+//! Integer power function.
+uint128_t ipow(uint128_t base, uint64_t exp);
+#endif
+
 //! Find the smallest divisor of n no smaller than m.
 uint64_t find_divisor(uint64_t n, uint64_t m);
 
 //! Interpret text at a given position as base-σ.
 template<class t_text_buf, class t_alphabet>
-uint64_t str_to_base_sigma(t_text_buf &text_buf, t_alphabet const &alphabet, uint64_t pos, uint64_t nc);
+uint128_t str_to_base_sigma(t_text_buf &text_buf, t_alphabet const &alphabet, uint64_t pos, uint64_t nc);
 
 
 } // end namespace util
@@ -647,13 +653,13 @@ T util::upper_power_of_2(T const val)
 }
 
 template<class t_text_buf, class t_alphabet>
-uint64_t util::str_to_base_sigma(t_text_buf &text_buf, t_alphabet const &alphabet, uint64_t pos, uint64_t nc)
+uint128_t util::str_to_base_sigma(t_text_buf &text_buf, t_alphabet const &alphabet, uint64_t pos, uint64_t nc)
 {
     assert(nc <= pos);
-    uint64_t res(0);
+    uint128_t res(0);
     typename t_text_buf::const_iterator const begin(text_buf.cbegin()), end(begin + pos);
     auto const power(nc);
-    auto const sigma(alphabet.sigma);
+    uint128_t const sigma(alphabet.sigma);
     auto it(end - nc);
     uint64_t t(1);
     while (it != end)

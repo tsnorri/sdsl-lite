@@ -533,7 +533,8 @@ namespace sdsl
 	template<class t_spec>
 	uint64_t csa_rao<t_spec>::decompress_sa(uint8_t ll, uint64_t val) const
 	{
-		uint64_t const a(util::ipow(m_partition_count, ll));
+		uint64_t const partitions(m_partition_count);
+		uint64_t const a(util::ipow(partitions, ll));
 		uint64_t const retval(a + a * val - 1);
 		return retval;
 	}

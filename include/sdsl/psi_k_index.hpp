@@ -48,7 +48,10 @@ namespace sdsl
 			int_vector_buffer<0> psi_idx_tmp(tmp_file_name, std::ios::out, 16 * 1024 * 1024, m_sa_buf.width());
 		
 			for (uint64_t i(0), count(m_sa_buf.size()); i < count; ++i)
+			{
+				assert(i <= psi_idx_tmp.max_value());
 				psi_idx_tmp[m_sa_buf[i]] = i;
+			}
 		
 			m_psi_idx = std::move(psi_idx_tmp);
 		}

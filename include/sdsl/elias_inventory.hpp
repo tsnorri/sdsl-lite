@@ -165,6 +165,7 @@ namespace sdsl {
 			{
 				// ck[j] is the cumulative sum of the counts of the items in the previous lists.
 				auto current_val(j * max + vec[j][i]);
+				assert(current_val <= combined.max_value());
 				combined[ck[j] + i] = current_val;
 				max_sum = std::max(current_val, max_sum);
 			}
@@ -190,6 +191,7 @@ namespace sdsl {
 			
 			ptr += high_val;
 			high_values[ptr] = 1;
+			assert(low_val <= low_values.max_value());
 			low_values[i] = low_val;
 			
 			prev_val = val;
