@@ -515,16 +515,16 @@ class int_vector_buffer
         class iterator_base: public std::iterator<std::random_access_iterator_tag, value_type, difference_type>
         {
             protected:
-                int_vector_buffer<t_width>& m_ivb;
+                int_vector_buffer<t_width> *m_ivb;
                 size_type m_idx = 0;
             public:
 
                 iterator_base() = delete;
-                iterator_base(int_vector_buffer<t_width>& ivb, size_type idx=0) : m_ivb(ivb), m_idx(idx) {}
+                iterator_base(int_vector_buffer<t_width>& ivb, size_type idx=0) : m_ivb(&ivb), m_idx(idx) {}
 
                 bool operator==(const iterator_base& it) const
                 {
-                    return &m_ivb == &(it.m_ivb) and m_idx == it.m_idx;
+                    return m_ivb == it.m_ivb and m_idx == it.m_idx;
                 }
 
                 bool operator!=(const iterator_base& it) const
@@ -534,11 +534,13 @@ class int_vector_buffer
 
                 bool operator<(const iterator_base& it) const
                 {
+                    assert(m_ivb == it.m_ivb);
                     return m_idx < it.m_idx;
                 }
 
                 inline difference_type operator-(const iterator_base& it)
                 {
+                    assert(m_ivb == it.m_ivb);
                     return (m_idx - it.m_idx);
                 }
         };
@@ -550,6 +552,10 @@ class int_vector_buffer
                 typedef iterator_tpl<t_reference> iterator_type;
             public:
                 using iterator_base::iterator_base;
+                using iterator_base::operator==;
+                using iterator_base::operator!=;
+                using iterator_base::operator<;
+                using iterator_base::operator-;
 
                 iterator_type& operator++()
                 {
@@ -579,7 +585,7 @@ class int_vector_buffer
 
                 t_reference operator*()const
                 {
-                    return this->m_ivb[this->m_idx];
+                    return (*this->m_ivb)[this->m_idx];
                 }
 
                 iterator_type& operator+=(difference_type i)
