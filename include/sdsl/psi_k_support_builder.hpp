@@ -21,7 +21,6 @@
 #include <sdsl/elias_inventory.hpp>
 #include <sdsl/int_vector.hpp>
 #include <sdsl/psi_k_index.hpp>
-#include <sdsl/uint128_t.hpp>
 
 
 namespace sdsl
@@ -47,8 +46,7 @@ namespace sdsl
 		{
 		public:
 			int_vector<0>::size_type stored_count(t_builder &builder, uint32_t partition) { return 0; }
-	 		uint8_t stored_width(t_builder &builder, uint32_t partition) { return 0; }
-			bool psi_k(t_builder &builder, uint32_t partition, uint64_t i, typename psi_k_index<t_sa_buf>::value_type &psi_k, uint128_t &j) { return false; }
+			bool psi_k(t_builder &builder, uint32_t partition, uint64_t i, typename psi_k_index<t_sa_buf>::value_type &psi_k, t_builder::text_range &j) { return false; }
 		};
 	*/
 	// TODO: verify time and space complexity.
@@ -107,6 +105,77 @@ namespace sdsl
 			uint32_t const partition,
 			t_delegate &delegate
 		);
+		
+		
+		class text_range
+		{
+		protected:
+			typedef typename t_text_buf::const_iterator const_iterator;
+			
+		protected:
+			const_iterator m_begin;
+			const_iterator m_end;
+			
+		public:
+			text_range(const_iterator begin, const_iterator end):
+				m_begin(begin),
+				m_end(end)
+			{
+			}
+			
+			// Construct a minimum iterator (w.r.t operator <).
+			// text_buf may be an int_vector_buffer the member function cbegin of
+			// which is not const.
+			text_range(t_text_buf &text_buf):
+				m_begin(text_buf.cbegin()),
+				m_end(text_buf.cbegin())
+			{
+			}
+			
+			text_range(t_text_buf &text_buf, uint64_t const pos, uint64_t const nc):
+				m_begin(text_buf.cbegin() + pos - nc),
+				m_end(text_buf.cbegin() + pos)
+			{
+			}
+			
+			bool operator!=(text_range const &other) const
+			{
+				return !(*this == other);
+			}
+			
+			bool operator==(text_range const &other) const
+			{
+				// int_vectors have random access iterators.
+				auto const d1(std::distance(m_begin, m_end));
+				auto const d2(std::distance(other.m_begin, other.m_end));
+				
+				if (d1 != d2)
+					return false;
+				
+				// Distances were just compared.
+				if (m_begin == other.m_begin)
+					return true;
+				
+				return std::equal(m_begin, m_end, other.m_begin);
+			}
+			
+			bool operator<(text_range const &other) const
+			{
+				// int_vectors have random access iterators.
+				auto const d1(std::distance(m_begin, m_end));
+				auto const d2(std::distance(other.m_begin, other.m_end));
+				
+				if (d1 < d2)
+					return true;
+				
+				if (d2 < d1)
+					return false;
+				
+				// If this is too slow, add an e.g. uint64_t field that represents the highest
+				// bits of the range and only use lexicographical_compare if the values are equal.
+				return std::lexicographical_compare(m_begin, m_end, other.m_begin, other.m_end);
+			}
+		};
 	};
 		
 	
@@ -155,16 +224,16 @@ namespace sdsl
 			// Solve the problem by re-mapping the indices to consecutive unsigned integers.
 			
 			// The L lists by list index j.
-			std::map<uint128_t, std::vector<uint64_t>> l_map_tmp;
+			std::map<text_range, std::vector<uint64_t>> l_map_tmp;
 			
 			// The i values by list index j, i.e. which L list stores the Ψ_k(i).
 			// unordered_multimap is much slower in practice.
-			std::multimap<uint128_t, uint64_t> l_k_values_tmp;
+			std::multimap<text_range, uint64_t> l_k_values_tmp;
 			
 			for (uint64_t i(0), count(m_sa_buf.size()); i < count; ++i)
 			{
 				typename psi_k_index<t_sa_buf>::value_type psi_k_i(0);
-				uint128_t j(0);
+				text_range j(m_text_buf);
 				
 				// psi_k_i and j are out-paramteres.
 				bool const status(delegate.psi_k(*this, partition, i, psi_k_i, j));
@@ -174,10 +243,8 @@ namespace sdsl
 					
 					// Insert Ψ_k(i) into L^k_j. The lists end up sorted (Lemma 3).
 					// Also store i into an inverted index.
-					assert(j <= std::numeric_limits<decltype(l_map_tmp)::key_type>::max());
-					assert(psi_k_i <= std::numeric_limits<decltype(l_map_tmp)::mapped_type::value_type>::max());
-					assert(j <= std::numeric_limits<decltype(l_k_values_tmp)::key_type>::max());
-					assert(i <= std::numeric_limits<decltype(l_k_values_tmp)::mapped_type>::max());
+					assert(psi_k_i <= std::numeric_limits<typename decltype(l_map_tmp)::mapped_type::value_type>::max());
+					assert(i <= std::numeric_limits<typename decltype(l_k_values_tmp)::mapped_type>::max());
 					l_map_tmp[j].push_back(psi_k_i);
 					l_k_values_tmp.emplace(j, i);
 				}
@@ -198,17 +265,17 @@ namespace sdsl
 			// XXX: this remapping is not in Rao's paper but should be obvious.
 			uint64_t i(0);
 			uint64_t ii(0);
-			uint128_t prev_j(0);
+			text_range prev_j(m_text_buf);
 			uint64_t rep_j(0);
 			for (auto &l_k_j : l_map_tmp)
 			{
 				// l_k_j.first yields j, .second gives the list L^k_j.
 				auto const j_val(l_k_j.first);
 				
-				// Replace j_val. Handle the case in which j_val = 0.
-				if (1 + j_val != prev_j)
+				// Replace j_val.
+				if (prev_j != j_val)
 				{
-					prev_j = 1 + j_val;
+					prev_j = j_val;
 					++rep_j;
 				}
 				
