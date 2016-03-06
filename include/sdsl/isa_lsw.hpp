@@ -81,12 +81,12 @@ namespace sdsl
 		class psi_k_support_builder_delegate
 		{
 		protected:
+			uint128_t m_kc_max{0};
 			uint64_t m_l{0};
-			uint64_t m_kc_max{0};
 		
 		public:
 			psi_k_support_builder_delegate(uint64_t const l): m_l(l) {}
-			void set_kc_max(uint64_t kc_max) { m_kc_max = kc_max; }
+			void set_kc_max(uint128_t kc_max) { m_kc_max = kc_max; }
 			int_vector<0>::size_type stored_count(t_builder &builder, uint32_t partition);
 			uint8_t stored_width(t_builder &builder, uint32_t partition);
 			
@@ -95,7 +95,7 @@ namespace sdsl
 				uint32_t partition,
 				uint64_t i,
 				typename psi_k_index<t_sa_buf>::value_type &psi_k,
-				uint64_t &j
+				uint128_t &j
 			);
 		};
 		
@@ -182,7 +182,7 @@ namespace sdsl
 			uint32_t partition,
 			uint64_t i,
 			typename psi_k_index<t_sa_buf>::value_type &psi_k,
-			uint64_t &j
+			uint128_t &j
 		) -> bool
 	{
 		auto val(builder.sa_buf()[i]);
@@ -244,7 +244,8 @@ namespace sdsl
 			psi_k_support_builder_delegate<decltype(builder), decltype(sa_buf)> delegate(l);
 			for (uint64_t k(1); k < l; ++k)
 			{
-				delegate.set_kc_max(util::ipow(m_csa.m_alphabet.sigma, k) - 1);
+				uint128_t const sigma(m_csa.m_alphabet.sigma);
+				delegate.set_kc_max(util::ipow(sigma, k) - uint128_t(1));
 				
 				psi_k_support_type psi_k_support;
 				builder.build(psi_k_support, k, delegate);

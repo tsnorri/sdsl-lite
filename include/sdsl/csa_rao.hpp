@@ -537,7 +537,8 @@ namespace sdsl
 	template<class t_spec>
 	uint64_t csa_rao<t_spec>::decompress_sa(uint8_t ll, uint64_t val) const
 	{
-		uint64_t const a(util::ipow(m_partition_count, ll));
+		uint64_t const partitions(m_partition_count);
+		uint64_t const a(util::ipow(partitions, ll));
 		uint64_t const retval(a + a * val - 1);
 		return retval;
 	}
@@ -557,7 +558,8 @@ namespace sdsl
 		std::string const text_file(cache_file_name(KEY_TEXT, config));
 		int_vector_buffer<alphabet_type::int_width> text_buf(text_file);
 
-		uint64_t const l_t(util::ipow(t_spec::s_partitions, t_spec::s_levels));
+		uint64_t const partitions(t_spec::s_partitions);
+		uint64_t const l_t(util::ipow(partitions, t_spec::s_levels));
 		auto const n(text_buf.size());
 		return (0 == n % l_t);
 	}
@@ -567,7 +569,8 @@ namespace sdsl
 	auto csa_rao<t_spec>::text_min_pad(typename text_buffer_type::size_type initial_size) -> typename text_buffer_type::size_type
 	{
 		// FIXME: handle the case where either s_levels or s_partitions is zero.
-		uint64_t const l_t(util::ipow(t_spec::s_partitions, t_spec::s_levels));
+		uint64_t const partitions(t_spec::s_partitions);
+		uint64_t const l_t(util::ipow(partitions, t_spec::s_levels));
 		if (l_t > initial_size)
 			return l_t - initial_size;
 		else
