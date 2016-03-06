@@ -51,9 +51,6 @@ namespace sdsl
 		class psi_k_support_builder_delegate
 		{
 		protected:
-			// Maximum value for the k * m_partition_count^current_level symbols in the pattern in base-σ.
-			uint128_t m_kc_max{0};
-
 			int_vector<0> const &m_d_values;
 			uint8_t const m_ll{0};
 			
@@ -64,10 +61,14 @@ namespace sdsl
 			{
 			}
 			
-			void set_kc_max(uint128_t kc_max) { m_kc_max = kc_max; }
 			int_vector<0>::size_type stored_count(t_builder &builder, uint32_t partition);
-	 		uint8_t stored_width(t_builder &builder, uint32_t partition);
-			bool psi_k(t_builder &builder, uint32_t partition, uint64_t i, typename psi_k_index<t_sa_buf>::value_type &psi_k, uint128_t &j);
+			bool psi_k(
+				t_builder &builder,
+				uint32_t partition,
+				uint64_t i,
+				typename psi_k_index<t_sa_buf>::value_type &psi_k,
+				typename t_builder::text_range &j
+			);
 		};
 	
 	protected:
@@ -210,8 +211,9 @@ namespace sdsl
 	template<class t_csa_rao>
 	template <class t_builder, class t_sa_buf>
 	int_vector<0>::size_type
-	csa_rao_builder<t_csa_rao>::psi_k_support_builder_delegate<t_builder, t_sa_buf>
-		::stored_count(t_builder &builder, uint32_t partition)
+	csa_rao_builder<t_csa_rao>::psi_k_support_builder_delegate<t_builder, t_sa_buf>::stored_count(
+		t_builder &builder, uint32_t partition
+	)
 	{
 		// Count (n / m_partition_count) from the beginning of p. 310; same as the number of items in the Ψ_k subsequences.
 		return (builder.sa_buf().size() / builder.csa().m_partition_count);
@@ -220,18 +222,9 @@ namespace sdsl
 	
 	template<class t_csa_rao>
 	template <class t_builder, class t_sa_buf>
-	uint8_t
-	csa_rao_builder<t_csa_rao>::psi_k_support_builder_delegate<t_builder, t_sa_buf>
-		::stored_width(t_builder &builder, uint32_t partition)
-	{
-		return util::upper_power_of_2(std::log2(1 + m_kc_max));
-	}
-	
-	
-	template<class t_csa_rao>
-	template <class t_builder, class t_sa_buf>
-	bool csa_rao_builder<t_csa_rao>::psi_k_support_builder_delegate<t_builder, t_sa_buf>
-		::psi_k(t_builder &builder, uint32_t partition, uint64_t i, typename psi_k_index<t_sa_buf>::value_type &psi_k, uint128_t &j)
+	bool csa_rao_builder<t_csa_rao>::psi_k_support_builder_delegate<t_builder, t_sa_buf>::psi_k(
+		t_builder &builder, uint32_t partition, uint64_t i, typename psi_k_index<t_sa_buf>::value_type &psi_k, typename t_builder::text_range &j
+	)
 	{
 		// Only consider the values that belong to the subsequences {Ψ_k(i) | d[i] = k} (3 (4), p. 310).
 		if (m_d_values[i] != partition)
@@ -247,9 +240,7 @@ namespace sdsl
 		auto decompressed_pos(builder.csa().decompress_sa(m_ll, pos));
 		auto const nc(partition * util::ipow(partitions, m_ll));
 		// decompressed_pos won't be included.
-		j = util::str_to_base_sigma(builder.text_buf(), builder.csa().m_alphabet, decompressed_pos, nc);
-		
-		assert(j <= m_kc_max);
+		j = typename t_builder::text_range(builder.text_buf(), decompressed_pos, nc);
 		
 		return true;
 	}
@@ -307,16 +298,6 @@ namespace sdsl
 		
 			for (uint64_t k(1); k < m_csa.m_partition_count; ++k)
 			{
-				// Maximum value for the k * m_partition_count^current_level symbols in base-σ.
-				// (Similar to the maximum of “the value in binary of the k symbols”).
-				uint64_t const pc(m_csa.m_partition_count);
-				uint128_t const sigma(m_csa.m_alphabet.sigma);
-				uint128_t const kc_max(util::ipow(
-					sigma,
-					k * util::ipow(pc, ll)
-				) - uint128_t(1));
-				delegate.set_kc_max(kc_max);
-			
 				psi_k_support_type psi_k_support;
 				builder.build(psi_k_support, k, delegate);
 			

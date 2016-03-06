@@ -81,21 +81,18 @@ namespace sdsl
 		class psi_k_support_builder_delegate
 		{
 		protected:
-			uint128_t m_kc_max{0};
 			uint64_t m_l{0};
 		
 		public:
 			psi_k_support_builder_delegate(uint64_t const l): m_l(l) {}
-			void set_kc_max(uint128_t kc_max) { m_kc_max = kc_max; }
 			int_vector<0>::size_type stored_count(t_builder &builder, uint32_t partition);
-			uint8_t stored_width(t_builder &builder, uint32_t partition);
 			
 			bool psi_k(
 				t_builder &builder,
 				uint32_t partition,
 				uint64_t i,
 				typename psi_k_index<t_sa_buf>::value_type &psi_k,
-				uint128_t &j
+				typename t_builder::text_range &j
 			);
 		};
 		
@@ -158,8 +155,9 @@ namespace sdsl
 	
 	template<class t_csa, class t_r_bit_vector, class t_s_bit_vector>
 	template <class t_builder, class t_sa_buf>
-	auto isa_lsw<t_csa, t_r_bit_vector, t_s_bit_vector>::psi_k_support_builder_delegate<t_builder, t_sa_buf>
-		::stored_count(t_builder &builder, uint32_t partition) -> int_vector<0>::size_type
+	auto isa_lsw<t_csa, t_r_bit_vector, t_s_bit_vector>::psi_k_support_builder_delegate<t_builder, t_sa_buf>::stored_count(
+		t_builder &builder, uint32_t partition
+	) -> int_vector<0>::size_type
 	{
 		return builder.sa_buf().size() / m_l;
 	}
@@ -167,23 +165,13 @@ namespace sdsl
 
 	template<class t_csa, class t_r_bit_vector, class t_s_bit_vector>
 	template <class t_builder, class t_sa_buf>
-	auto isa_lsw<t_csa, t_r_bit_vector, t_s_bit_vector>::psi_k_support_builder_delegate<t_builder, t_sa_buf>
-		::stored_width(t_builder &builder, uint32_t partition) -> uint8_t
-	{
-		return util::upper_power_of_2(std::log2(1 + m_kc_max));
-	}
-	
-	
-	template<class t_csa, class t_r_bit_vector, class t_s_bit_vector>
-	template <class t_builder, class t_sa_buf>
-	auto isa_lsw<t_csa, t_r_bit_vector, t_s_bit_vector>::psi_k_support_builder_delegate<t_builder, t_sa_buf>
-		::psi_k(
-			t_builder &builder,
-			uint32_t partition,
-			uint64_t i,
-			typename psi_k_index<t_sa_buf>::value_type &psi_k,
-			uint128_t &j
-		) -> bool
+	bool isa_lsw<t_csa, t_r_bit_vector, t_s_bit_vector>::psi_k_support_builder_delegate<t_builder, t_sa_buf>::psi_k(
+		t_builder &builder,
+		uint32_t partition,
+		uint64_t i,
+		typename psi_k_index<t_sa_buf>::value_type &psi_k,
+		typename t_builder::text_range &j
+	)
 	{
 		auto val(builder.sa_buf()[i]);
 		if (0 == val % m_l)
@@ -193,10 +181,7 @@ namespace sdsl
 			{
 				auto pos(builder.csa()[psi_k - 1]);
 				assert(partition <= pos);
-				j = util::str_to_base_sigma(builder.text_buf(), builder.alphabet(), pos, partition);
-				
-				assert(j <= m_kc_max);
-				
+				j = typename t_builder::text_range(builder.text_buf(), pos, partition);
 				return true;
 			}
 		}
@@ -244,9 +229,6 @@ namespace sdsl
 			psi_k_support_builder_delegate<decltype(builder), decltype(sa_buf)> delegate(l);
 			for (uint64_t k(1); k < l; ++k)
 			{
-				uint128_t const sigma(m_csa.m_alphabet.sigma);
-				delegate.set_kc_max(util::ipow(sigma, k) - uint128_t(1));
-				
 				psi_k_support_type psi_k_support;
 				builder.build(psi_k_support, k, delegate);
 				this->m_psi_k_support.emplace_back(std::move(psi_k_support));
