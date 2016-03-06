@@ -37,7 +37,7 @@ byte_alphabet::byte_alphabet(int_vector_buffer<8>& text_buf, int_vector_size_typ
     for (size_type i=0; i < len; ++i) {
         ++m_C[text_buf[i]];
     }
-    assert(1 == m_C[0]); // null-byte should occur exactly once
+
     m_sigma = 0;
     for (int i=0; i<256; ++i)
         if (m_C[i]) {
