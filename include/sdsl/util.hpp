@@ -26,6 +26,7 @@
 #include "ram_fs.hpp"
 #include "config.hpp"  // for constants
 #include "uint128_t.hpp"
+#include "uint256_t.hpp"
 #include <iosfwd>      // forward declaration of ostream
 #include <stdint.h>    // for uint64_t uint32_t declaration
 #include <cassert>
@@ -381,6 +382,11 @@ uint64_t ipow(uint64_t base, uint64_t exp);
 #ifdef MODE_TI
 //! Integer power function.
 uint128_t ipow(uint128_t base, uint64_t exp);
+#endif
+
+#ifdef MODE_OI
+//! Integer power function.
+uint256_t ipow(uint256_t base, uint64_t exp);
 #endif
 
 //! Find the smallest divisor of n no smaller than m.

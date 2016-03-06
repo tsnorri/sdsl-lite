@@ -28,6 +28,12 @@
 namespace sdsl
 {
 
+#ifdef MODE_OI
+	
+	typedef unsigned int uint128_t __attribute__((mode(OI)));
+	
+#else
+
 class uint256_t
 {
     public:
@@ -243,10 +249,11 @@ class uint256_t
             }
         }
 
-        inline operator uint64_t() {
+        inline operator uint64_t() const {
             return m_lo;
         }
 };
+#endif
 
 std::ostream& operator<<(std::ostream& os, const uint256_t& x);
 

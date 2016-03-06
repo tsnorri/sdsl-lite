@@ -3,9 +3,10 @@
 //! Namespace for the succinct data structure library
 namespace sdsl
 {
+
 std::ostream& operator<<(std::ostream& os, const uint256_t& x)
 {
-    uint64_t X[4] = {(uint64_t)(x.m_high >> 64), (uint64_t)x.m_high, x.m_mid, x.m_lo};
+    uint64_t X[4] = {(uint64_t)(x >> 192), (uint64_t)(x >> 128), (uint64_t)(x >> 64), (uint64_t)(x)};
     for (int j=0; j < 4; ++j) {
         for (int i=0; i < 16; ++i) {
             os << std::hex << ((X[j]>>60)&0xFULL) << std::dec;
@@ -14,4 +15,5 @@ std::ostream& operator<<(std::ostream& os, const uint256_t& x)
     }
     return os;
 }
+
 } // end namespace
