@@ -184,9 +184,10 @@ size_t file_size(const std::string& file)
     }
 }
 
-uint64_t ipow(uint64_t base, uint64_t exp)
+template <typename t_base>
+t_base ipow_tpl(t_base base, uint64_t exp)
 {
-	uint64_t res(1); // x ** 0 = 1.
+	t_base res(1); // x ** 0 = 1.
 	while (exp)
 	{
 		if (1 & exp)
@@ -198,6 +199,18 @@ uint64_t ipow(uint64_t base, uint64_t exp)
 
 	return res;
 }
+
+uint64_t ipow(uint64_t base, uint64_t exp)
+{
+	return ipow_tpl<uint64_t>(base, exp);
+}
+
+#ifdef MODE_TI
+uint128_t ipow(uint128_t base, uint64_t exp)
+{
+	return ipow_tpl<uint128_t>(base, exp);
+}
+#endif
 
 uint64_t find_divisor(uint64_t n, uint64_t start)
 {

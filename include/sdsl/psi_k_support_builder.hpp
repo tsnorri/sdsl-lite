@@ -21,6 +21,7 @@
 #include <sdsl/elias_inventory.hpp>
 #include <sdsl/int_vector.hpp>
 #include <sdsl/psi_k_index.hpp>
+#include <sdsl/uint128_t.hpp>
 
 
 namespace sdsl
@@ -47,7 +48,7 @@ namespace sdsl
 		public:
 			int_vector<0>::size_type stored_count(t_builder &builder, uint32_t partition) { return 0; }
 	 		uint8_t stored_width(t_builder &builder, uint32_t partition) { return 0; }
-			bool psi_k(t_builder &builder, uint32_t partition, uint64_t i, typename psi_k_index<t_sa_buf>::value_type &psi_k, uint64_t &j) { return false; }
+			bool psi_k(t_builder &builder, uint32_t partition, uint64_t i, typename psi_k_index<t_sa_buf>::value_type &psi_k, uint128_t &j) { return false; }
 		};
 	*/
 	// TODO: verify time and space complexity.
@@ -154,16 +155,16 @@ namespace sdsl
 			// Solve the problem by re-mapping the indices to consecutive unsigned integers.
 			
 			// The L lists by list index j.
-			std::map<uint64_t, std::vector<uint64_t>> l_map_tmp;
+			std::map<uint128_t, std::vector<uint64_t>> l_map_tmp;
 			
 			// The i values by list index j, i.e. which L list stores the Ψ_k(i).
 			// unordered_multimap is much slower in practice.
-			std::multimap<uint64_t, uint64_t> l_k_values_tmp;
+			std::multimap<uint128_t, uint64_t> l_k_values_tmp;
 			
 			for (uint64_t i(0), count(m_sa_buf.size()); i < count; ++i)
 			{
 				typename psi_k_index<t_sa_buf>::value_type psi_k_i(0);
-				uint64_t j(0);
+				uint128_t j(0);
 				
 				// psi_k_i and j are out-paramteres.
 				bool const status(delegate.psi_k(*this, partition, i, psi_k_i, j));
@@ -197,7 +198,7 @@ namespace sdsl
 			// XXX: this remapping is not in Rao's paper but should be obvious.
 			uint64_t i(0);
 			uint64_t ii(0);
-			uint64_t prev_j(0);
+			uint128_t prev_j(0);
 			uint64_t rep_j(0);
 			for (auto &l_k_j : l_map_tmp)
 			{
