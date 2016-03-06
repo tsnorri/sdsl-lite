@@ -212,6 +212,13 @@ uint128_t ipow(uint128_t base, uint64_t exp)
 }
 #endif
 
+#ifdef MODE_OI
+uint256_t ipow(uint256_t base, uint64_t exp)
+{
+    return ipow_tpl<uint256_t>(base, exp);
+}
+#endif
+
 uint64_t find_divisor(uint64_t n, uint64_t start)
 {
 	uint64_t lim(std::ceil(std::sqrt(n)));
