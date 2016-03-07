@@ -17,7 +17,7 @@
 #ifndef INCLUDED_SDSL_PSI_K_INDEX
 #define INCLUDED_SDSL_PSI_K_INDEX
 
-#include <sdsl/int_vector_buffer.hpp>
+#include <sdsl/int_vector.hpp>
 
 
 namespace sdsl
@@ -30,7 +30,7 @@ namespace sdsl
 		typedef uint64_t value_type;
 	protected:
 		t_sa_buf_type &m_sa_buf; // Check that psi_k object lifetime does not exceed that of sa_buf.
-		int_vector_buffer<0> m_psi_idx;
+		int_vector<0> m_psi_idx;
 	
 	public:
 		psi_k_index() = delete;
@@ -42,12 +42,10 @@ namespace sdsl
 		psi_k_index(cache_config& config, t_sa_buf_type &sa_buf):
 			m_sa_buf(sa_buf)
 		{
-			std::string tmp_key(util::to_string(util::pid()) + "_Psi_k_idx_" + util::to_string(util::id()));
-			std::string tmp_file_name(cache_file_name(tmp_key, config));
-			// FIXME: use int_vector_mapper instead.
-			int_vector_buffer<0> psi_idx_tmp(tmp_file_name, std::ios::out, 16 * 1024 * 1024, m_sa_buf.width());
+			auto const count(m_sa_buf.size());
+			int_vector<0> psi_idx_tmp(count, 0, 1 + bits::hi(count));
 		
-			for (uint64_t i(0), count(m_sa_buf.size()); i < count; ++i)
+			for (uint64_t i(0); i < count; ++i)
 			{
 				assert(i <= psi_idx_tmp.max_value());
 				psi_idx_tmp[m_sa_buf[i]] = i;
@@ -56,7 +54,7 @@ namespace sdsl
 			m_psi_idx = std::move(psi_idx_tmp);
 		}
 		
-		int_vector_buffer<0> &psi_idx() { return m_psi_idx; }
+		int_vector<0> &psi_idx() { return m_psi_idx; }
 	
 		// Accessors return values in range [0, n], i.e. 1-based indices.
 		value_type from_sa_val(uint64_t k, uint64_t v);

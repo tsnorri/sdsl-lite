@@ -18,7 +18,7 @@
 #define INCLUDED_SDSL_CSA_RAO_BUILDER
 
 #include <sdsl/csa_alphabet_strategy.hpp>
-#include <sdsl/int_vector_buffer.hpp>
+#include <sdsl/int_vector.hpp>
 #include <sdsl/psi_k_index.hpp>
 
 
@@ -82,8 +82,8 @@ namespace sdsl
 		t_csa_rao &m_csa;
 		cache_config &m_config;
 		
-		int_vector_buffer<t_csa_rao::alphabet_type::int_width> m_text_buf;
-		int_vector_buffer<> m_sa_buf;
+		int_vector<t_csa_rao::alphabet_type::int_width> m_text_buf;
+		int_vector<> m_sa_buf;
 		uint64_t m_d_size{0};
 		
 	public:
@@ -151,18 +151,8 @@ namespace sdsl
 		assert(cache_file_exists(KEY_SA, m_config));
 		assert(cache_file_exists(KEY_TEXT, m_config));
 		
-		// Create the suffix array.
-		typedef int_vector<t_csa_rao::alphabet_category::WIDTH> text_type;
-		
-		std::string const text_file(cache_file_name(KEY_TEXT, m_config));
-		int_vector_buffer<t_csa_rao::alphabet_type::int_width> text_buf_tmp(text_file);
-		int_vector_buffer<> sa_buf_tmp(cache_file_name(KEY_SA, m_config));
-		
-		m_text_buf = std::move(text_buf_tmp);
-		
-		// FIXME: this should be memory-mapped, too?
-		m_sa_buf = std::move(sa_buf_tmp);
-		m_sa_buf.buffersize(8 * 1024 * 1024);
+		load_from_file(m_sa_buf, cache_file_name(KEY_SA, m_config));
+		load_from_file(m_text_buf, cache_file_name(KEY_TEXT, m_config));
 	}
 	
 	
@@ -207,6 +197,7 @@ namespace sdsl
 	void csa_rao_builder<t_csa_rao>::compress_sa()
 	{
 		compress_level(0, m_sa_buf);
+		m_sa_buf.resize(0);
 		for (uint8_t ll(1); ll < m_csa.m_level_count; ++ll)
 			compress_level(ll, m_csa.m_sa);
 	}
