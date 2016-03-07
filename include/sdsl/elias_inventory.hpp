@@ -33,7 +33,7 @@ namespace sdsl {
 	protected:
 		s_bit_vector m_values_high;
 		int_vector<0> m_values_low;
-		value_type m_max{0};
+		value_type m_mask{0};
 		uint8_t m_low_bits{0};
 	
 	public:
@@ -135,7 +135,7 @@ namespace sdsl {
 		value_type high_val(m_values_high_s1_support.select(1 + i) - i);
 		high_val <<= this->m_low_bits;
 		high_val |= low_val;
-		return high_val % this->m_max;
+		return high_val & this->m_mask;
 	}
 	
 	
@@ -145,16 +145,21 @@ namespace sdsl {
 	elias_inventory<t_s_bit_vector>::elias_inventory(t_vec const &vec, t_ck const &ck):
 		elias_inventory()
 	{
-		decltype(this->m_max) max(0);
+		decltype(this->m_mask) max(0);
 		size_type const total_count(ck[ck.size() - 1]);
 		
-		// Find a value greater than any of the stored.
-		for (size_type j(0), set_count(vec.size()); j < set_count; ++j)
 		{
-			for (size_type i(0), count(vec[j].size()); i < count; ++i)
-				max = std::max(vec[j][i], max);
+			decltype(max) max_tmp(0);
+			// Find a value greater than any of the stored.
+			for (size_type j(0), set_count(vec.size()); j < set_count; ++j)
+			{
+				for (size_type i(0), count(vec[j].size()); i < count; ++i)
+					max_tmp = std::max(vec[j][i], max_tmp);
+			}
+			++max_tmp;
+			max = util::upper_power_of_2(max_tmp);
+			assert(max_tmp <= max);
 		}
-		++max;
 		
 		// Combine the values in vec into one set.
 		int_vector<64> combined(total_count, 0);
@@ -164,10 +169,14 @@ namespace sdsl {
 			for (size_type i(0), count(vec[j].size()); i < count; ++i)
 			{
 				// ck[j] is the cumulative sum of the counts of the items in the previous lists.
-				auto current_val(j * max + vec[j][i]);
-				assert(current_val <= combined.max_value());
-				combined[ck[j] + i] = current_val;
-				max_sum = std::max(current_val, max_sum);
+				auto const current_val(vec[j][i]);
+				auto const pad(j * max);
+				auto const scaled_val(pad | current_val);
+				assert(0 == (pad & current_val));
+				assert((0 == j) || (((j - 1) * max) | current_val) < scaled_val);
+				assert(scaled_val <= combined.max_value());
+				combined[ck[j] + i] = scaled_val;
+				max_sum = std::max(scaled_val, max_sum);
 			}
 		}
 		
@@ -198,10 +207,22 @@ namespace sdsl {
 			++ptr;
 		}
 		
+		{
+			auto const rightmost(bits::lo(max));
+			decltype(this->m_mask) mask(0);
+			
+			// Set the bits not used by multiples of mask to one.
+			mask = ~mask;
+			mask >>= rightmost;
+			mask <<= rightmost;
+			mask = ~mask;
+			
+			this->m_mask = mask;
+		}
+		
 		this->m_values_high = high_values;
 		m_values_high_s1_support = std::move(select_1_support_type(&this->m_values_high));
 		this->m_values_low = std::move(low_values);
-		this->m_max = max;
 		this->m_low_bits = low_bits;
 	}
 	
@@ -214,7 +235,7 @@ namespace sdsl {
 		
 		written_bytes += this->m_values_high.serialize(out, child, "m_values_high");
 		written_bytes += this->m_values_low.serialize(out, child, "m_values_low");
-		written_bytes += write_member(this->m_max, out, child, "m_max");
+		written_bytes += write_member(this->m_mask, out, child, "m_mask");
 		written_bytes += write_member(this->m_low_bits, out, child, "m_low_bits");
 		written_bytes += m_values_high_s1_support.serialize(out, child, "m_values_high_s1_support");
 	
@@ -228,7 +249,7 @@ namespace sdsl {
 	{
 		this->m_values_high.load(in);
 		this->m_values_low.load(in);
-		read_member(this->m_max, in);
+		read_member(this->m_mask, in);
 		read_member(this->m_low_bits, in);
 		m_values_high_s1_support.load(in);
 		m_values_high_s1_support.set_vector(&this->m_values_high);
