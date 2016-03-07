@@ -474,7 +474,8 @@ class int_vector
         //! Maximum value that can be stored by the vector.
         uint64_t max_value()
         {
-            return (0xFFFFFFFFFFFFFFFF >> (64 - (0 == t_width ? m_width : t_width)));
+            uint64_t const zero(0);
+            return ((~zero) >> (64 - (0 == t_width ? m_width : t_width)));
         }
 
         // Write data (without header) to a stream.
