@@ -59,7 +59,7 @@ namespace sdsl {
 	 */
 	// TODO: compare Grossi and Vitter's and Rao's variants to the one proposed by Elias in Efficient Storage and Retrieval by Content and Address of Static Files, Journal of the ACM, 21(2): 246–260 (1974).
 	// TODO: verify time and space complexity.
-	template<class t_s_bit_vector = bit_vector>
+	template<class t_s_bit_vector>
 	class elias_inventory : public elias_inventory_base<t_s_bit_vector>
 	{
 	public:
@@ -101,7 +101,7 @@ namespace sdsl {
 		
 		elias_inventory &operator=(elias_inventory const &other) &;
 		elias_inventory &operator=(elias_inventory &&other) &;
-		value_type operator[](size_type i) const;
+		value_type operator[](size_type i) const SDSL_HOT;
 		
 		auto serialize(std::ostream& out, structure_tree_node *v = nullptr, std::string name = "") const -> size_type;
 		void load(std::istream& in);
@@ -177,7 +177,7 @@ namespace sdsl {
 		// Grossi and Vitter use floor (lemma 2), Rao uses ceil (lemma 1).
 		size_type const high_bits(std::floor(std::log2(total_count)));
 		decltype(this->m_low_bits) low_bits = bits - high_bits;
-		s_bit_vector high_values(2 * total_count, 0); // Size from lemma 1.
+		bit_vector high_values(2 * total_count, 0); // Size from lemma 1.
 		int_vector<0> low_values(total_count, 0, util::upper_power_of_2(low_bits));
 		size_type ptr(0);
 		value_type prev_val(0);
@@ -198,7 +198,7 @@ namespace sdsl {
 			++ptr;
 		}
 		
-		this->m_values_high = std::move(high_values);
+		this->m_values_high = high_values;
 		m_values_high_s1_support = std::move(select_1_support_type(&this->m_values_high));
 		this->m_values_low = std::move(low_values);
 		this->m_max = max;

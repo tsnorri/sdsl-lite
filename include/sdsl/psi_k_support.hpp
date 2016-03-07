@@ -19,12 +19,11 @@
 
 #include <sdsl/elias_inventory.hpp>
 #include <sdsl/int_vector.hpp>
-#include <sdsl/rrr_vector.hpp>
 
 
 namespace sdsl
 {
-	template<class t_r_bit_vector, class t_s_bit_vector>
+	template<class t_bit_vector, class t_r_bit_vector, class t_s_bit_vector>
 	class psi_k_support_base
 	{
 	public:
@@ -46,7 +45,7 @@ namespace sdsl
 		psi_k_support_base &operator=(psi_k_support_base &&) & = default;
 		
 		psi_k_support_base(
-			bit_vector const &v_values,					// Copied
+			t_bit_vector const &v_values,				// Copied
 			int_vector<0> &l_k_values,					// Moved
 			int_vector<64> &c_k_values,					// Moved
 			elias_inventory<s_bit_vector> &psi_k_values	// Moved
@@ -72,14 +71,13 @@ namespace sdsl
 	 *  Information Processing Letters 82(6): 307–311 (2002)
 	 */
 	// TODO: verify time and space complexity.
-	template<
-		class t_r_bit_vector = rrr_vector<>,
-		class t_s_bit_vector = bit_vector
-	>
-	class psi_k_support : public psi_k_support_base<t_r_bit_vector, t_s_bit_vector>
+	template<class t_bit_vector, class t_r_bit_vector, class t_s_bit_vector>
+	class psi_k_support : public psi_k_support_base<t_bit_vector, t_r_bit_vector, t_s_bit_vector>
 	{
 	public:
-		typedef psi_k_support_base<t_r_bit_vector, t_s_bit_vector>	base_class;
+		typedef psi_k_support_base<
+			t_bit_vector, t_r_bit_vector, t_s_bit_vector
+		> base_class;
 		typedef typename base_class::r_bit_vector					r_bit_vector;
 		typedef typename base_class::s_bit_vector					s_bit_vector;
 		typedef int_vector<0>::size_type							size_type;
@@ -123,14 +121,14 @@ namespace sdsl
 		
 		psi_k_support &operator=(psi_k_support const &other) &;
 		psi_k_support &operator=(psi_k_support &&other) &;
-		uint64_t operator[](size_type i) const;
+		uint64_t operator[](size_type i) const SDSL_HOT;
 		auto serialize(std::ostream& out, structure_tree_node *v = nullptr, std::string name = "") const -> size_type;
 		void load(std::istream& in);
 	};
 	
 	
-	template<class t_r_bit_vector, class t_s_bit_vector>
-	auto psi_k_support<t_r_bit_vector, t_s_bit_vector>::operator=(psi_k_support const &other) & -> psi_k_support &
+	template<class t_bit_vector, class t_r_bit_vector, class t_s_bit_vector>
+	auto psi_k_support<t_bit_vector, t_r_bit_vector, t_s_bit_vector>::operator=(psi_k_support const &other) & -> psi_k_support &
 	{
 		base_class::operator=(other);
 		m_v_values_r1_support = other.m_v_values_r1_support;
@@ -139,8 +137,8 @@ namespace sdsl
 	}
 	
 	
-	template<class t_r_bit_vector, class t_s_bit_vector>
-	auto psi_k_support<t_r_bit_vector, t_s_bit_vector>::operator=(psi_k_support &&other) & -> psi_k_support &
+	template<class t_bit_vector, class t_r_bit_vector, class t_s_bit_vector>
+	auto psi_k_support<t_bit_vector, t_r_bit_vector, t_s_bit_vector>::operator=(psi_k_support &&other) & -> psi_k_support &
 	{
 		base_class::operator=(std::move(other));
 		m_v_values_r1_support = std::move(other.m_v_values_r1_support);
@@ -149,8 +147,8 @@ namespace sdsl
 	}
 	
 	
-	template<class t_r_bit_vector, class t_s_bit_vector>
-	uint64_t psi_k_support<t_r_bit_vector, t_s_bit_vector>::operator[](size_type i) const
+	template<class t_bit_vector, class t_r_bit_vector, class t_s_bit_vector>
+	uint64_t psi_k_support<t_bit_vector, t_r_bit_vector, t_s_bit_vector>::operator[](size_type i) const
 	{
 		uint64_t const r(m_v_values_r1_support.rank(1 + i) - 1);
 		auto retval(this->m_psi_k_values[r] - 1);
@@ -158,8 +156,8 @@ namespace sdsl
 	}
 	
 	
-	template<class t_r_bit_vector, class t_s_bit_vector>
-	auto psi_k_support<t_r_bit_vector, t_s_bit_vector>::serialize(std::ostream& out, structure_tree_node *v, std::string name) const -> size_type
+	template<class t_bit_vector, class t_r_bit_vector, class t_s_bit_vector>
+	auto psi_k_support<t_bit_vector, t_r_bit_vector, t_s_bit_vector>::serialize(std::ostream& out, structure_tree_node *v, std::string name) const -> size_type
 	{
 		structure_tree_node *child(structure_tree::add_child(v, name, util::class_name(*this)));
 		size_type written_bytes(0);
@@ -173,8 +171,8 @@ namespace sdsl
 	}
 	
 	
-	template<class t_r_bit_vector, class t_s_bit_vector>
-	void psi_k_support<t_r_bit_vector, t_s_bit_vector>::load(std::istream& in)
+	template<class t_bit_vector, class t_r_bit_vector, class t_s_bit_vector>
+	void psi_k_support<t_bit_vector, t_r_bit_vector, t_s_bit_vector>::load(std::istream& in)
 	{
 		this->m_v_values.load(in);
 		this->m_psi_k_values.load(in);

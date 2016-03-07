@@ -42,7 +42,11 @@ namespace sdsl
 	public:
 		typedef csa_rao_builder<t_csa_rao> builder_type;
 		typedef typename t_csa_rao::spec_type::delegate_type delegate_type;
-		typedef psi_k_support<typename t_csa_rao::spec_type::r_bit_vector, typename t_csa_rao::spec_type::s_bit_vector> psi_k_support_type;
+		typedef psi_k_support<
+			typename t_csa_rao::spec_type::bit_vector,
+			typename t_csa_rao::spec_type::r_bit_vector,
+			typename t_csa_rao::spec_type::s_bit_vector
+		> psi_k_support_type;
 		
 	protected:
 		friend typename t_csa_rao::spec_type::delegate_type;

@@ -38,7 +38,7 @@
 namespace sdsl
 {
 	template<class t_csa_rao> class csa_rao_builder;
-	template<class t_csa, class t_r_bit_vector, class t_s_bit_vector> class isa_lsw;
+	template<class t_csa, class t_bit_vector, class t_r_bit_vector, class t_s_bit_vector> class isa_lsw;
 	
 	//! Template argument container for sdsl::csa_rao.
 	/*! \tparam	t_levels			Number of levels. Zero indicates a value determined at run time.
@@ -52,25 +52,27 @@ namespace sdsl
 	 *  \tparam t_delegate			Helper class for debugging purposes.
 	 */
 	// TODO: verify time and space complexity.
-	template<uint32_t t_levels							= 0,
-			 uint32_t t_partitions						= 0,
-			 class t_alphabet_strat						= byte_alphabet,
-			 class t_r_bit_vector						= rrr_vector<>,
-			 class t_s_bit_vector						= bit_vector,
-			 class t_rs_bit_vector						= bit_vector,
-			 template<class, class, class> class t_isa	= isa_lsw,
-			 class t_delegate							= csa_rao_delegate
+	template<uint32_t t_levels									= 0,
+			 uint32_t t_partitions								= 0,
+			 class t_alphabet_strat								= byte_alphabet,
+			 class t_bit_vector									= bit_vector,
+			 class t_r_bit_vector								= bit_vector,
+			 class t_s_bit_vector								= bit_vector,
+			 class t_rs_bit_vector								= bit_vector,
+			 template<class, class, class, class> class t_isa	= isa_lsw,
+			 class t_delegate									= csa_rao_delegate
 			>
 	class csa_rao_spec
 	{
 	public:
 		typedef t_alphabet_strat	alphabet_strat;
+		typedef t_bit_vector		bit_vector;
 		typedef t_r_bit_vector		r_bit_vector;
 		typedef t_s_bit_vector		s_bit_vector;
 		typedef t_rs_bit_vector		rs_bit_vector;
 		typedef t_delegate			delegate_type;
 		
-		template<class t_csa> using isa_type = t_isa<t_csa, r_bit_vector, s_bit_vector>;
+		template<class t_csa> using isa_type = t_isa<t_csa, bit_vector, r_bit_vector, s_bit_vector>;
 		
 		static uint32_t const s_levels{t_levels};
 		static uint32_t const s_partitions{t_partitions};
@@ -125,7 +127,9 @@ namespace sdsl
 		typedef int_vector_buffer<alphabet_type::int_width>									text_buffer_type;
 		typedef typename std::remove_const<decltype(t_spec::s_levels)>::type				level_count_type;
 		typedef typename std::remove_const<decltype(t_spec::s_partitions)>::type			partition_count_type;
-		typedef psi_k_support<typename t_spec::r_bit_vector, typename t_spec::s_bit_vector>	psi_k_support_type;
+		typedef psi_k_support<
+			typename t_spec::bit_vector, typename t_spec::r_bit_vector, typename t_spec::s_bit_vector
+		> psi_k_support_type;
 		typedef t_spec																		spec_type;
 
 		typedef csa_tag																		index_category;
@@ -214,7 +218,7 @@ namespace sdsl
 		const_iterator cbegin() const { return const_iterator(this, 0); }
 		const_iterator cend() const { return const_iterator(this, size()); }
 		value_type operator[](size_type i) const;
-		value_type sa(size_type i, level_count_type level) const;
+		value_type sa(size_type i, level_count_type level) const SDSL_HOT;
 		uint64_t psi_k(uint64_t k, uint64_t i) const;
 		uint64_t psi_k(level_count_type lidx, uint64_t k, uint64_t i) const;
 	
@@ -571,10 +575,16 @@ namespace sdsl
 		// FIXME: handle the case where either s_levels or s_partitions is zero.
 		uint64_t const partitions(t_spec::s_partitions);
 		uint64_t const l_t(util::ipow(partitions, t_spec::s_levels));
-		if (l_t > initial_size)
+		if (initial_size <= l_t)
 			return l_t - initial_size;
 		else
-			return (l_t - initial_size % l_t);
+		{
+			auto const rem(initial_size % l_t);
+			if (rem)
+				return (l_t - rem);
+			else
+				return 0;
+		}
 	}
 } // end namespace sdsl
 #endif
