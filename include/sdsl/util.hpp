@@ -50,6 +50,12 @@
 #define SDSL_STR(x) #x
 #define SDSL_XSTR(s) SDSL_STR(s)
 
+#ifdef HAVE_ATTRIBUTE_HOT
+#define SDSL_HOT __attribute__ ((hot))
+#else
+#define SDSL_HOT
+#endif
+
 #ifndef MSVC_COMPILER
 #define SDSL_UNUSED __attribute__ ((unused))
 #include <sys/time.h>  // for struct timeval
