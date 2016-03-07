@@ -202,10 +202,12 @@ namespace sdsl
 		
 		assert(cache_file_exists(KEY_SA, config));
 		assert(cache_file_exists(KEY_TEXT, config));
-		std::string const text_file(cache_file_name(KEY_TEXT, config));
 
-		int_vector_buffer<> sa_buf(cache_file_name(KEY_SA, config));
-		int_vector_buffer<t_csa::alphabet_type::int_width> text_buf(text_file);
+		int_vector<> sa_buf;
+		int_vector<t_csa::alphabet_type::int_width> text_buf;
+		
+		load_from_file(sa_buf, cache_file_name(KEY_SA, config));
+		load_from_file(text_buf, cache_file_name(KEY_TEXT, config));
 		
 		uint64_t const l(m_csa.m_partition_count);
 		
@@ -224,7 +226,7 @@ namespace sdsl
 
 		{
 			// Lemma 2.
-			sdsl::psi_k_index<decltype(sa_buf)> psi_k_fn(config, sa_buf);
+			psi_k_index<decltype(sa_buf)> psi_k_fn(config, sa_buf);
 			
 			this->m_psi_k_support.reserve(l - 1);
 			auto builder(construct_psi_k_support_builder(m_csa, text_buf, sa_buf, m_csa.m_alphabet, psi_k_fn));
