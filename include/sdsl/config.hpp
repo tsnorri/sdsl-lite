@@ -43,7 +43,6 @@ struct cache_config {
     // a concatenation of PID and a unique ID inside the
     // current process.
     tMSS 		file_map;		// Files stored during the construction process.
-    std::set<std::string> unregistered_files;
     cache_config(bool f_delete_files=true, std::string f_dir="./", std::string f_id="", tMSS f_file_map=tMSS());
 };
 

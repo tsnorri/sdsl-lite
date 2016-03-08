@@ -118,6 +118,7 @@ void construct(t_index& idx, const std::string& file, cache_config& config, uint
     const char* KEY_TEXT = key_text_trait<t_index::alphabet_category::WIDTH>::KEY_TEXT;
     const char* KEY_BWT  = key_bwt_trait<t_index::alphabet_category::WIDTH>::KEY_BWT;
     typedef int_vector<t_index::alphabet_category::WIDTH> text_type;
+
     {
         auto event = memory_monitor::event("parse input text");
         // (1) check, if the text is cached and usable
@@ -132,6 +133,7 @@ void construct(t_index& idx, const std::string& file, cache_config& config, uint
             load_vector_from_file(text, file, num_bytes);
             if (contains_no_zero_symbol(text, file)) {
                 typename text_type::size_type text_min_pad(t_index::text_min_pad(1 + text.size()));
+
                 append_zero_symbol(text, 1 + text_min_pad);
                 store_to_cache(text, KEY_TEXT, config);
             }
@@ -163,7 +165,6 @@ void construct(t_index& idx, const std::string& file, cache_config& config, uint
     if (config.delete_files) {
         auto event = memory_monitor::event("delete temporary files");
         util::delete_all_files(config.file_map);
-        util::delete_all_files(config.unregistered_files);
     }
 }
 
@@ -215,7 +216,6 @@ void construct(t_index& idx, const std::string& file, cache_config& config, uint
     if (config.delete_files) {
         auto event = memory_monitor::event("delete temporary files");
         util::delete_all_files(config.file_map);
-        util::delete_all_files(config.unregistered_files);
     }
 }
 
@@ -275,7 +275,6 @@ void construct(t_index& idx, const std::string& file, cache_config& config, uint
     if (config.delete_files) {
         auto event = memory_monitor::event("delete temporary files");
         util::delete_all_files(config.file_map);
-        util::delete_all_files(config.unregistered_files);
     }
 }
 
