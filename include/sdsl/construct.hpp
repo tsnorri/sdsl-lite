@@ -133,6 +133,7 @@ void construct(t_index& idx, const std::string& file, cache_config& config, uint
             load_vector_from_file(text, file, num_bytes);
             if (contains_no_zero_symbol(text, file)) {
                 typename text_type::size_type text_min_pad(t_index::text_min_pad(1 + text.size()));
+
                 append_zero_symbol(text, 1 + text_min_pad);
                 store_to_cache(text, KEY_TEXT, config);
             }
