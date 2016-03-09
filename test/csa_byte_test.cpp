@@ -143,10 +143,9 @@ TYPED_TEST(csa_byte_test, sigma)
     TypeParam csa;
     ASSERT_TRUE(load_from_file(csa, temp_file));
     int_vector<8> text;
-    // csa_rao zero-pads the file, so use the preprocessed one instead of the original.
-    auto const test_file(csa_byte_test_base::s_config.file_map[conf::KEY_TEXT]);
-    ASSERT_GT(test_file.size(), 0);
-    ASSERT_TRUE(load_from_file(text, test_file));
+    ASSERT_TRUE(load_vector_from_file(text, test_file, 1));
+    text.resize(text.size()+1);
+    text[text.size()-1] = 0; // add 0-character to the end
     ASSERT_EQ(text.size(), csa.size());
     bit_vector occur(256, 0);
     uint16_t sigma = 0;
