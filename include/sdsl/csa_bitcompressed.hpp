@@ -156,6 +156,11 @@ class csa_bitcompressed
             }
         }
 
+        //! The amount of zero padding added to the end of the text.
+        size_type padding()const
+        {
+            return 0;
+        }
 
         //! Number of elements in the instance.
         /*! Required for the Container Concept of the STL.
