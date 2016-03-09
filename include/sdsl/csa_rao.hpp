@@ -119,7 +119,7 @@ namespace sdsl
 		typedef typename t_spec::template isa_type<csa_type>								isa_type;
 		typedef typename t_spec::alphabet_strat												alphabet_type;
 		typedef typename alphabet_type::alphabet_category									alphabet_category;
-		typedef typename alphabet_type::char_type											char_type; // Note: This is the char type of the CSA not the WT!
+		typedef typename alphabet_type::char_type											char_type;
 		typedef typename alphabet_type::comp_char_type										comp_char_type;
 		typedef typename alphabet_type::string_type											string_type;
 		
@@ -159,9 +159,10 @@ namespace sdsl
 		int_vector<0> m_sa; // The most recent (in terms of level) suffix array, 0-based indices. // FIXME: really <0>? Check the initializer that it actually chooses the smallest type possible.
 		array<level> m_levels;
 		alphabet_type m_alphabet;
-		level_count_type m_level_count;			// FIXME: is this needed?
-		partition_count_type m_partition_count;	// FIXME: is this needed?
 		isa_type m_isa;
+		level_count_type m_level_count{0};			// FIXME: only needed in serialization?
+		partition_count_type m_partition_count{0};	// FIXME: only needed in serialization?
+		size_type m_padding{0};
 	
 	protected:
 		rank_bwt_type							const rank_bwt		= rank_bwt_type(*this);
@@ -210,7 +211,8 @@ namespace sdsl
 		csa_rao &operator=(csa_type const &csa) &;
 		csa_rao &operator=(csa_type &&csa) &;
 	
-		size_type size() const { return m_levels[0].d_values().size(); }
+		size_type padding() const { return m_padding; }
+		size_type size() const { return m_levels[0].d_values().size() - padding(); }
 		size_type max_size() const { return m_levels[0].d_values().max_size(); }
 		bool empty()const { return 0 == size(); }
 		const_iterator begin() const { return const_iterator(this, 0); }
@@ -398,9 +400,10 @@ namespace sdsl
 		m_sa = other.m_sa;
 		m_levels = other.m_levels;
 		m_alphabet = other.m_alphabet;
+		m_isa = other.m_isa;
 		m_level_count = other.m_level_count;
 		m_partition_count = other.m_partition_count;
-		m_isa = other.m_isa;
+		m_padding = other.m_padding;
 	}
 	
 	
@@ -410,9 +413,10 @@ namespace sdsl
 		m_sa = std::move(other.m_sa);
 		m_levels = std::move(other.m_levels);
 		m_alphabet = std::move(other.m_alphabet);
+		m_isa = std::move(other.m_isa);
 		m_level_count = std::move(other.m_level_count);
 		m_partition_count = std::move(other.m_partition_count);
-		m_isa = std::move(other.m_isa);
+		m_padding = std::move(other.m_padding);
 	}
 	
 	
@@ -435,7 +439,7 @@ namespace sdsl
 	template<class t_spec>
 	auto csa_rao<t_spec>::operator[](size_type i) const -> value_type
 	{
-		return sa(i, 0);
+		return sa(i + padding(), 0);
 	}
 		
 	
@@ -505,6 +509,7 @@ namespace sdsl
 		written_bytes += m_alphabet.serialize(out, child, "m_alphabet");
 		written_bytes += write_member(m_level_count, out, child, "m_level_count");
 		written_bytes += write_member(m_partition_count, out, child, "m_partition_count");
+		written_bytes += write_member(m_padding, out, child, "m_padding");
 		
 		level_count_type i(1);
 		assert(m_levels.size() == m_level_count);
@@ -529,6 +534,7 @@ namespace sdsl
 		m_alphabet.load(in);
 		read_member(m_level_count, in);
 		read_member(m_partition_count, in);
+		read_member(m_padding, in);
 		
 		m_levels.resize(m_level_count);
 		for (decltype(m_level_count) i(0); i < m_level_count; ++i)
