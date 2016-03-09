@@ -172,6 +172,8 @@ class byte_alphabet
 
         byte_alphabet& operator=(const byte_alphabet&);
         byte_alphabet& operator=(byte_alphabet&&);
+    
+        C_type &get_C() { return m_C; }
 
         void swap(byte_alphabet&);
 
