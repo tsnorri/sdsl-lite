@@ -25,10 +25,16 @@ class csa_byte_test : public ::testing::Test { };
 using testing::Types;
 
 typedef Types<
-csa_wt<>,
+       csa_wt<>,
        csa_sada<>,
+       csa_rao<>,
        csa_sada<enc_vector<coder::fibonacci>>,
        csa_sada<enc_vector<coder::elias_gamma>>,
+       csa_rao<csa_rao_spec<2, 2>>,
+       csa_rao<csa_rao_spec<2, 4>>,
+       csa_rao<csa_rao_spec<4, 2>>,
+       csa_rao<csa_rao_spec<5, 2>>,
+       csa_rao<csa_rao_spec<4, 4>>,
        csa_wt<wt_huff<>, 8, 16, text_order_sa_sampling<>>,
        csa_wt<wt_huff<>,32,32,fuzzy_sa_sampling<>>,
        csa_wt<wt_huff<>,32,32,fuzzy_sa_sampling<bit_vector, bit_vector>, fuzzy_isa_sampling_support<>>,
