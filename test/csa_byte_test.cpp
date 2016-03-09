@@ -20,7 +20,7 @@ bool in_memory;
 class csa_byte_test_base : public ::testing::Test
 {
 protected:
-	static cache_config s_config;
+    static cache_config s_config;
 
 public:
     static void SetupTestCase()
@@ -38,7 +38,7 @@ template<class T>
 class csa_byte_test : public csa_byte_test_base
 {
 protected:
-	using csa_byte_test_base::s_config;
+    using csa_byte_test_base::s_config;
 };
 
 cache_config csa_byte_test_base::s_config = {};
@@ -165,10 +165,12 @@ TYPED_TEST(csa_byte_test, sa_access)
     ASSERT_TRUE(load_from_file(csa, temp_file));
     int_vector<> sa;
     load_from_file(sa, csa_byte_test_base::s_config.file_map[conf::KEY_SA]);
-    size_type n = sa.size();
+    size_type n = 1 + util::file_size(test_file);
     ASSERT_EQ(n, csa.size());
+    // csa_rao may have padding, remove its effect.
+    auto const padding(csa.padding());
     for (size_type j=0; j<n; ++j) {
-        ASSERT_EQ(sa[j], csa[j])<<" j="<<j;
+        ASSERT_EQ(sa[j + padding], csa[j])<<" j="<<j;
     }
 }
 
@@ -182,13 +184,16 @@ TYPED_TEST(csa_byte_test, isa_access)
     {
         int_vector<> sa;
         load_from_file(sa, csa_byte_test_base::s_config.file_map[conf::KEY_SA]);
-        n = sa.size();
+        n = 1 + util::file_size(test_file);
         ASSERT_EQ(n, csa.size());
         isa = sa;
+        // csa_rao may have padding, remove its effect.
+        auto const padding(csa.padding());
         for (size_type j=0; j<n; ++j) {
-            isa[sa[j]] = j;
+            isa[sa[j + padding]] = j;
         }
     }
+    
     for (size_type j=0; j<n; ++j) {
         ASSERT_EQ(isa[j], csa.isa[j])<<" j="<<j;
     }
@@ -201,7 +206,9 @@ TYPED_TEST(csa_byte_test, text_access)
         TypeParam csa;
         ASSERT_TRUE(load_from_file(csa, temp_file));
         int_vector<8> text;
-        load_from_file(text, csa_byte_test_base::s_config.file_map[conf::KEY_TEXT]);
+        ASSERT_TRUE(load_vector_from_file(text, test_file, 1));
+        text.resize(text.size()+1);
+        text[text.size()-1] = 0; // add 0-character to the end
         size_type n = text.size();
         ASSERT_EQ(n, csa.size());
         for (size_type j=0; j<n; ++j) {
@@ -224,10 +231,12 @@ TYPED_TEST(csa_byte_test, bwt_access)
         ASSERT_TRUE(load_from_file(csa, temp_file));
         int_vector<8> bwt;
         load_from_file(bwt, csa_byte_test_base::s_config.file_map[conf::KEY_BWT]);
-        size_type n = bwt.size();
+        size_type n = 1 + util::file_size(test_file);
         ASSERT_EQ(n, csa.size());
+        // csa_rao may have padding, remove its effect.
+        auto const padding(csa.padding());
         for (size_type j=0; j<n; ++j) {
-            ASSERT_EQ(bwt[j], csa.bwt[j])<<" j="<<j;
+            ASSERT_EQ(bwt[j + padding], csa.bwt[j])<<" j="<<j;
         }
     }
 }
@@ -238,7 +247,9 @@ TYPED_TEST(csa_byte_test, f_access)
         TypeParam csa;
         ASSERT_TRUE(load_from_file(csa, temp_file));
         int_vector<8> text;
-        load_from_file(text, csa_byte_test_base::s_config.file_map[conf::KEY_TEXT]);
+        ASSERT_TRUE(load_vector_from_file(text, test_file, 1));
+        text.resize(text.size()+1);
+        text[text.size()-1] = 0; // add 0-character to the end
         std::sort(begin(text),end(text));
         size_type n = text.size();
         ASSERT_EQ(n, csa.size());
@@ -287,10 +298,12 @@ TYPED_TEST(csa_byte_test, swap)
     csa1.swap(csa2);
     int_vector<> sa;
     load_from_file(sa, csa_byte_test_base::s_config.file_map[conf::KEY_SA]);
-    size_type n = sa.size();
+    size_type n = 1 + util::file_size(test_file);
     ASSERT_EQ(n, csa2.size());
+    // csa_rao may have padding, remove its effect.
+    auto const padding(csa2.padding());
     for (size_type j=0; j<n; ++j) {
-        ASSERT_EQ((typename TypeParam::value_type)sa[j], csa2[j]);
+        ASSERT_EQ((typename TypeParam::value_type)sa[j + padding], csa2[j]);
     }
 }
 
