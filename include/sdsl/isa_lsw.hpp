@@ -182,7 +182,7 @@ namespace sdsl
 			psi_k = builder.psi_k_fn().from_sa_val(partition, val);
 			if (psi_k)
 			{
-				auto pos(builder.csa()[psi_k - 1]);
+				auto pos(builder.csa().sa(psi_k - 1, 0));
 				assert(partition <= pos);
 				j = typename t_builder::text_range(builder.text_buf(), pos, partition);
 				return true;
@@ -277,11 +277,12 @@ namespace sdsl
 	auto isa_lsw<t_csa, t_bit_vector, t_r_bit_vector, t_s_bit_vector>::operator[](size_type i) const -> value_type
 	{
 		uint64_t const l(m_csa.m_partition_count);
-		size_type y(i / l);
-		size_type yl(y * l);
-		size_type k(i - yl);
-		value_type z(this->m_isa[y]);
-		value_type retval(psi_k(k, z));
+		size_type const y(i / l);
+		size_type const yl(y * l);
+		size_type const k(i - yl);
+		value_type const z(this->m_isa[y]);
+		value_type const psi_val(psi_k(k, z));
+		value_type const retval(psi_val - m_csa.padding());
 		return retval;
 	}
 	
