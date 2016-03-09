@@ -138,6 +138,16 @@ namespace sdsl
 		int_vector_buffer<t_csa_rao::alphabet_type::int_width> bwt_buf(cache_file_name(KEY_BWT, m_config));
 		typename t_csa_rao::size_type n(bwt_buf.size());
 		typename t_csa_rao::alphabet_type tmp_alphabet(bwt_buf, n);
+		
+		// Remove the effect of padding.
+		auto &orig_c(tmp_alphabet.get_C());
+		int_vector<64> tmp_c(orig_c);
+		auto const padding = (orig_c[1] - 1);
+		for (decltype(tmp_c)::size_type i(1), size(tmp_c.size()); i < size; ++i)
+			 tmp_c[i] -= padding;
+		orig_c = tmp_c;
+
+		m_csa.m_padding = padding;
 		m_csa.m_alphabet.swap(tmp_alphabet);
 	}
 	
@@ -169,10 +179,8 @@ namespace sdsl
 		
 		if (0 == m_csa.m_partition_count)
 		{
-			m_csa.m_partition_count = util::find_divisor(
-				n,
-				std::ceil(std::pow(std::log2(n), 1.0 / (1 + m_csa.m_level_count)))
-			);
+			auto const start(std::ceil(std::pow(std::log2(n), 1.0 / (1 + m_csa.m_level_count))));
+			m_csa.m_partition_count = util::find_divisor(n, (start < 1 ? 1 : start));
 		}
 
 		uint64_t const partitions(m_csa.m_partition_count);
