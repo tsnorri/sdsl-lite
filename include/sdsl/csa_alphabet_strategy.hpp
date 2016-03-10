@@ -524,7 +524,6 @@ class int_alphabet
                 util::init_support(m_char_rank, &m_char);
                 util::init_support(m_char_select, &m_char);
             }
-            assert(D.find(0) != D.end() and 1 == D[0]); // null-byte should occur exactly once
 
             // resize to sigma+1, since CSAs also need the sum of all elements
             m_C = C_type(m_sigma+1, 0, bits::hi(len)+1);
@@ -570,6 +569,8 @@ class int_alphabet
             return *this;
         }
 
+        C_type &get_C() { return m_C; }
+	
         //! Swap operator
         void swap(int_alphabet& strat)
         {
