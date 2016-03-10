@@ -141,9 +141,9 @@ namespace sdsl
 		
 		// Remove the effect of padding.
 		auto &orig_c(tmp_alphabet.get_C());
-		int_vector<64> tmp_c(orig_c);
+		typename std::remove_reference<decltype(orig_c)>::type tmp_c(orig_c);
 		auto const padding = (orig_c[1] - 1);
-		for (decltype(tmp_c)::size_type i(1), size(tmp_c.size()); i < size; ++i)
+		for (typename decltype(tmp_c)::size_type i(1), size(tmp_c.size()); i < size; ++i)
 			 tmp_c[i] -= padding;
 		orig_c = tmp_c;
 
