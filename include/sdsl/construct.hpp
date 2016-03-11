@@ -231,6 +231,7 @@ void construct(t_index& idx, const std::string& file, cache_config& config, uint
 
 
 
+#warning padding for construct_lcp_semi_extern_PHI
 // Specialization for CSTs
 template<class t_index>
 void construct(t_index& idx, const std::string& file, cache_config& config, uint8_t num_bytes, cst_tag)
@@ -239,12 +240,14 @@ void construct(t_index& idx, const std::string& file, cache_config& config, uint
     const char* KEY_TEXT = key_text_trait<t_index::alphabet_category::WIDTH>::KEY_TEXT;
     const char* KEY_BWT  = key_bwt_trait<t_index::alphabet_category::WIDTH>::KEY_BWT;
     csa_tag csa_t;
+    uint64_t padding(0);
     {
         // (1) check, if the compressed suffix array is cached
         typename t_index::csa_type csa;
         if (!cache_file_exists(std::string(conf::KEY_CSA)+"_"+util::class_to_hash(csa), config)) {
             cache_config csa_config(false, config.dir, config.id, config.file_map);
             construct(csa, file, csa_config, num_bytes, csa_t);
+            padding = csa.padding();
             auto event = memory_monitor::event("store CSA");
             config.file_map = csa_config.file_map;
             store_to_cache(csa,std::string(conf::KEY_CSA)+"_"+util::class_to_hash(csa), config);
@@ -259,9 +262,9 @@ void construct(t_index& idx, const std::string& file, cache_config& config, uint
         register_cache_file(conf::KEY_SA, config);
         if (!cache_file_exists(conf::KEY_LCP, config)) {
             if (t_index::alphabet_category::WIDTH==8) {
-                construct_lcp_semi_extern_PHI(config);
+                construct_lcp_semi_extern_PHI(config, padding);
             } else {
-                construct_lcp_PHI<t_index::alphabet_category::WIDTH>(config);
+                construct_lcp_PHI<t_index::alphabet_category::WIDTH>(config); // FIXME: take padding into account.
             }
         }
         register_cache_file(conf::KEY_LCP, config);

@@ -198,7 +198,7 @@ void construct_lcp_PHI(cache_config& config)
  *         Permuted Longest-Common-Prefix Array.
  *         CPM 2009: 181-192
  */
-void construct_lcp_semi_extern_PHI(cache_config& config);
+void construct_lcp_semi_extern_PHI(cache_config& config, uint64_t const padding);
 
 
 //! Construct the LCP array (only for byte strings)
