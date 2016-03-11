@@ -16,19 +16,43 @@ namespace
 typedef int_vector<>::size_type size_type;
 typedef bit_vector bit_vector;
 
-tMSS  test_case_file_map;
 string test_file;
 string temp_file;
 string temp_dir;
 bool in_memory;
 
+
+class cst_byte_test_base : public ::testing::Test
+{
+protected:
+    static cache_config s_config;
+
+public:
+    static void SetupTestCase()
+    {
+    }
+    
+    static void TearDownTestCase()
+    {
+        // csa_rao handles multiple zero symbols but other classes may not.
+        util::delete_all_files(s_config.file_map);
+    }
+};
+
 template<class T>
-class cst_byte_test : public ::testing::Test { };
+class cst_byte_test : public cst_byte_test_base
+{
+protected:
+    using cst_byte_test_base::s_config;
+};
+
+cache_config cst_byte_test_base::s_config = {};
+
 
 using testing::Types;
 
 typedef Types<
-cst_sct3<>,
+         cst_sct3<>,
          cst_sada<>,
          cst_fully<>,
          cst_sct3<cst_sct3<>::csa_type, lcp_bitcompressed<>>,
@@ -42,7 +66,17 @@ cst_sct3<>,
          cst_sct3<cst_sct3<>::csa_type, lcp_support_sada<> >,
          cst_sct3<cst_sct3<>::csa_type, lcp_wt<> >,
          cst_sct3<cst_sct3<>::csa_type, lcp_support_tree<>, bp_support_g<> >,
-         cst_sct3<csa_bitcompressed<>, lcp_bitcompressed<> >
+         cst_sct3<csa_bitcompressed<>, lcp_bitcompressed<> >,
+         cst_sada<csa_bitcompressed<>, lcp_bitcompressed<>>,
+         cst_sada<csa_bitcompressed<>, lcp_support_sada<>>,
+         cst_sada<csa_rao<csa_rao_spec<2, 2>>, lcp_bitcompressed<>>,
+         cst_sada<csa_rao<csa_rao_spec<2, 4>>, lcp_bitcompressed<>>,
+         cst_sada<csa_rao<csa_rao_spec<4, 2>>, lcp_bitcompressed<>>,
+         cst_sada<csa_rao<csa_rao_spec<4, 4>>, lcp_bitcompressed<>>,
+         cst_sada<csa_rao<csa_rao_spec<2, 2>>, lcp_support_sada<>>,
+         cst_sada<csa_rao<csa_rao_spec<2, 4>>, lcp_support_sada<>>,
+         cst_sada<csa_rao<csa_rao_spec<4, 2>>, lcp_support_sada<>>,
+         cst_sada<csa_rao<csa_rao_spec<4, 4>>, lcp_support_sada<>>
          > Implementations;
 
 TYPED_TEST_CASE(cst_byte_test, Implementations);
@@ -53,9 +87,8 @@ TYPED_TEST(cst_byte_test, create_and_store)
     static_assert(sdsl::util::is_regular<TypeParam>::value, "Type is not regular");
     TypeParam cst;
     ASSERT_TRUE(cst.empty());
-    cache_config config(false, temp_dir, util::basename(test_file));
-    construct(cst, test_file, config, 1);
-    test_case_file_map = config.file_map;
+    cst_byte_test_base::s_config = cache_config(false, temp_dir, util::basename(test_file));
+    construct(cst, test_file, cst_byte_test_base::s_config, 1);
     ASSERT_TRUE(store_to_file(cst, temp_file));
     TypeParam cst2;
     cst2 = cst;
@@ -122,7 +155,7 @@ TYPED_TEST(cst_byte_test, sa_access)
     TypeParam cst;
     ASSERT_TRUE(load_from_file(cst, temp_file));
     sdsl::int_vector<> sa;
-    sdsl::load_from_file(sa, test_case_file_map[sdsl::conf::KEY_SA]);
+    sdsl::load_from_file(sa, cst_byte_test_base::s_config.file_map[sdsl::conf::KEY_SA]);
     size_type n = sa.size();
     ASSERT_EQ(n, cst.csa.size());
     for (size_type j=0; j<n; ++j) {
@@ -137,7 +170,7 @@ TYPED_TEST(cst_byte_test, move_sa_access)
     ASSERT_TRUE(load_from_file(cst_load, temp_file));
     TypeParam cst = std::move(cst_load);
     sdsl::int_vector<> sa;
-    sdsl::load_from_file(sa, test_case_file_map[sdsl::conf::KEY_SA]);
+    sdsl::load_from_file(sa, cst_byte_test_base::s_config.file_map[sdsl::conf::KEY_SA]);
     size_type n = sa.size();
     ASSERT_EQ(n, cst.csa.size());
     for (size_type j=0; j<n; ++j) {
@@ -151,7 +184,7 @@ TYPED_TEST(cst_byte_test, bwt_access)
     TypeParam cst;
     ASSERT_TRUE(load_from_file(cst, temp_file));
     sdsl::int_vector<8> bwt;
-    sdsl::load_from_file(bwt, test_case_file_map[sdsl::conf::KEY_BWT]);
+    sdsl::load_from_file(bwt, cst_byte_test_base::s_config.file_map[sdsl::conf::KEY_BWT]);
     size_type n = bwt.size();
     ASSERT_EQ(n, cst.csa.bwt.size());
     for (size_type j=0; j<n; ++j) {
@@ -165,7 +198,7 @@ TYPED_TEST(cst_byte_test, lcp_access)
     TypeParam cst;
     ASSERT_TRUE(load_from_file(cst, temp_file));
     sdsl::int_vector<> lcp;
-    sdsl::load_from_file(lcp, test_case_file_map[sdsl::conf::KEY_LCP]);
+    sdsl::load_from_file(lcp, cst_byte_test_base::s_config.file_map[sdsl::conf::KEY_LCP]);
     size_type n = lcp.size();
     ASSERT_EQ(n, cst.lcp.size());
     for (size_type j=0; j<n; ++j) {
@@ -180,7 +213,7 @@ TYPED_TEST(cst_byte_test, move_lcp_access)
     ASSERT_TRUE(load_from_file(cst_load, temp_file));
     TypeParam cst = std::move(cst_load);
     sdsl::int_vector<> lcp;
-    sdsl::load_from_file(lcp, test_case_file_map[sdsl::conf::KEY_LCP]);
+    sdsl::load_from_file(lcp, cst_byte_test_base::s_config.file_map[sdsl::conf::KEY_LCP]);
     size_type n = lcp.size();
     ASSERT_EQ(n, cst.lcp.size());
     for (size_type j=0; j<n; ++j) {
@@ -349,12 +382,12 @@ TYPED_TEST(cst_byte_test, edge)
         auto v = cst.select_leaf(cst.csa.isa[0]+1);
         size_type max_depth = std::min(cst.depth(v), (size_type)20);
         for (size_type i=0; i<max_depth; ++i) {
-            ASSERT_EQ(data[i], cst.edge(v, i+1))<<" i="<<i<<" v="<<v;
+            ASSERT_EQ(data[i], cst.edge(v, i+1))<<" i="<<i;//<<" v="<<v; FIXME enable
         }
         v = cst.parent(v);
         max_depth = std::min(max_depth, cst.depth(v));
         for (size_type i=0; i<max_depth; ++i) {
-            ASSERT_EQ(data[i], cst.edge(v, i+1))<<" i="<<i<<" v="<<v;
+            ASSERT_EQ(data[i], cst.edge(v, i+1))<<" i="<<i;//<<" v="<<v; FIXME enable
         }
     }
 }
@@ -431,8 +464,8 @@ TYPED_TEST(cst_byte_test, lca_method)
         // calculate lca
         auto z = naive_lca(cst, v, w);
         auto u = cst.lca(v, w);
-        ASSERT_EQ(z, u) << " naive_lca is "
-                        << naive_lca(cst, v, w, true) << endl;
+        ASSERT_EQ(z, u); // << " naive_lca is "
+                        //<< naive_lca(cst, v, w, true) << endl; FIXME enable
     }
 }
 
@@ -448,7 +481,7 @@ TYPED_TEST(cst_byte_test, bottom_up_iterator)
 TYPED_TEST(cst_byte_test, delete_)
 {
     sdsl::remove(temp_file);
-    util::delete_all_files(test_case_file_map);
+    util::delete_all_files(cst_byte_test_base::s_config.file_map);
 }
 
 }// end namespace
