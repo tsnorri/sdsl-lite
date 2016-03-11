@@ -210,9 +210,15 @@ namespace sdsl
 		csa_rao &operator=(csa_type const &csa) &;
 		csa_rao &operator=(csa_type &&csa) &;
 	
+		size_type size() const
+		{
+			if (0 == m_levels.size())
+				return 0;
+			return m_levels[0].d_values().size() - padding();
+		}
+
 		size_type padding() const { return m_padding; }
-		size_type size() const { return m_levels[0].d_values().size() - padding(); }
-		size_type max_size() const { return m_levels[0].d_values().max_size(); }
+		static size_type max_size() { return level::d_values_type::max_size(); }
 		bool empty()const { return 0 == size(); }
 		const_iterator begin() const { return const_iterator(this, 0); }
 		const_iterator end() const { return const_iterator(this, size()); }
@@ -241,11 +247,12 @@ namespace sdsl
 	{
 	public:
 		typedef typename spec_type::r_bit_vector r_bit_vector;
+		typedef int_vector<0> d_values_type;
 		
 	protected:
 		array<psi_k_support_type> m_partitions;
 		r_bit_vector m_b_values;
-		int_vector<0> m_d_values;	// l − (SA[i] mod l), SA[i] 1-based (3.3). // FIXME: really <0>?
+		d_values_type m_d_values;	// l − (SA[i] mod l), SA[i] 1-based (3.3). // FIXME: really <0>?
 		
 	public:
 		level_base():
@@ -277,6 +284,7 @@ namespace sdsl
 	{
 	public:
 		typedef typename level_base::r_bit_vector r_bit_vector;
+		typedef typename level_base::d_values_type d_values_type;
 		
 	protected:
 		typedef typename r_bit_vector::rank_1_type r1_type;
