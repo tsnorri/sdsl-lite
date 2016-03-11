@@ -23,19 +23,20 @@
 #include <sdsl/psi_k_index.hpp>
 #include <sdsl/psi_k_support.hpp>
 #include <sdsl/psi_k_support_builder.hpp>
-#include <sdsl/rrr_vector.hpp>
 #include <sdsl/select_support.hpp>
 
 
 namespace sdsl
 {
-	template<class t_r_bit_vector, class t_s_bit_vector>
+	template<class t_bit_vector, class t_r_bit_vector, class t_s_bit_vector>
 	class isa_lsw_base
 	{
 	public:
 		typedef t_r_bit_vector								r_bit_vector;
 		typedef t_s_bit_vector								s_bit_vector;
-		typedef psi_k_support<r_bit_vector, s_bit_vector>	psi_k_support_type;
+		typedef psi_k_support<
+			t_bit_vector, r_bit_vector, s_bit_vector
+		> psi_k_support_type;
 		
 	protected:
 		int_vector<0> m_isa;
@@ -61,8 +62,8 @@ namespace sdsl
 	 *  ISAAC 2005: 339–348
 	 */
 	// TODO: verify time and space complexity.
-	template<class t_csa, class t_r_bit_vector = rrr_vector<>, class t_s_bit_vector = bit_vector>
-	class isa_lsw : public isa_lsw_base<t_r_bit_vector, t_s_bit_vector>
+	template<class t_csa, class t_bit_vector, class t_r_bit_vector, class t_s_bit_vector>
+	class isa_lsw : public isa_lsw_base<t_bit_vector, t_r_bit_vector, t_s_bit_vector>
 	{
 	public:
 		typedef isa_lsw											isa_type;
@@ -71,7 +72,9 @@ namespace sdsl
 		typedef typename t_csa::size_type						size_type;
 		typedef typename t_csa::difference_type					difference_type;
 		
-		typedef isa_lsw_base<t_r_bit_vector, t_s_bit_vector>	base_class;
+		typedef isa_lsw_base<
+			t_bit_vector, t_r_bit_vector, t_s_bit_vector
+		> base_class;
 		typedef typename base_class::r_bit_vector				r_bit_vector;
 		typedef typename base_class::s_bit_vector				s_bit_vector;
 		typedef typename base_class::psi_k_support_type			psi_k_support_type;
@@ -128,7 +131,7 @@ namespace sdsl
 		// i is the value from isa.
 		uint64_t psi_k(uint64_t k, uint64_t i) const;
 		
-		value_type operator[](size_type i) const;
+		value_type operator[](size_type i) const SDSL_HOT;
 	
 		//! Returns the size of the ISA.
 		size_type size() const { return m_csa.size(); }
@@ -153,9 +156,9 @@ namespace sdsl
 	};
 	
 	
-	template<class t_csa, class t_r_bit_vector, class t_s_bit_vector>
+	template<class t_csa, class t_bit_vector, class t_r_bit_vector, class t_s_bit_vector>
 	template <class t_builder, class t_sa_buf>
-	auto isa_lsw<t_csa, t_r_bit_vector, t_s_bit_vector>::psi_k_support_builder_delegate<t_builder, t_sa_buf>::stored_count(
+	auto isa_lsw<t_csa, t_bit_vector, t_r_bit_vector, t_s_bit_vector>::psi_k_support_builder_delegate<t_builder, t_sa_buf>::stored_count(
 		t_builder &builder, uint32_t partition
 	) -> int_vector<0>::size_type
 	{
@@ -163,9 +166,9 @@ namespace sdsl
 	}
 	
 
-	template<class t_csa, class t_r_bit_vector, class t_s_bit_vector>
+	template<class t_csa, class t_bit_vector, class t_r_bit_vector, class t_s_bit_vector>
 	template <class t_builder, class t_sa_buf>
-	bool isa_lsw<t_csa, t_r_bit_vector, t_s_bit_vector>::psi_k_support_builder_delegate<t_builder, t_sa_buf>::psi_k(
+	bool isa_lsw<t_csa, t_bit_vector, t_r_bit_vector, t_s_bit_vector>::psi_k_support_builder_delegate<t_builder, t_sa_buf>::psi_k(
 		t_builder &builder,
 		uint32_t partition,
 		uint64_t i,
@@ -189,8 +192,8 @@ namespace sdsl
 	}
 	
 	
-	template<class t_csa, class t_r_bit_vector, class t_s_bit_vector>
-	isa_lsw<t_csa, t_r_bit_vector, t_s_bit_vector>::isa_lsw(t_csa const &csa, cache_config& config):
+	template<class t_csa, class t_bit_vector, class t_r_bit_vector, class t_s_bit_vector>
+	isa_lsw<t_csa, t_bit_vector, t_r_bit_vector, t_s_bit_vector>::isa_lsw(t_csa const &csa, cache_config& config):
 		isa_lsw(csa)
 	{
 		// Access the text and the suffix array. m_csa could be used instead.
@@ -237,8 +240,8 @@ namespace sdsl
 	}
 	
 	
-	template<class t_csa, class t_r_bit_vector, class t_s_bit_vector>
-	auto isa_lsw<t_csa, t_r_bit_vector, t_s_bit_vector>::operator=(isa_type const &other) & -> isa_type &
+	template<class t_csa, class t_bit_vector, class t_r_bit_vector, class t_s_bit_vector>
+	auto isa_lsw<t_csa, t_bit_vector, t_r_bit_vector, t_s_bit_vector>::operator=(isa_type const &other) & -> isa_type &
 	{
 		// m_csa must have already been set since it needs to be given in the constructor.
 		base_class::operator=(other);
@@ -246,8 +249,8 @@ namespace sdsl
 	}
 	
 	
-	template<class t_csa, class t_r_bit_vector, class t_s_bit_vector>
-	auto isa_lsw<t_csa, t_r_bit_vector, t_s_bit_vector>::operator=(isa_type &&other) & -> isa_type &
+	template<class t_csa, class t_bit_vector, class t_r_bit_vector, class t_s_bit_vector>
+	auto isa_lsw<t_csa, t_bit_vector, t_r_bit_vector, t_s_bit_vector>::operator=(isa_type &&other) & -> isa_type &
 	{
 		// m_csa must have already been set since it needs to be given in the constructor.
 		base_class::operator=(std::move(other));
@@ -256,8 +259,8 @@ namespace sdsl
 	
 	
 	// i is the value from isa.
-	template<class t_csa, class t_r_bit_vector, class t_s_bit_vector>
-	uint64_t isa_lsw<t_csa, t_r_bit_vector, t_s_bit_vector>::psi_k(uint64_t k, uint64_t i) const
+	template<class t_csa, class t_bit_vector, class t_r_bit_vector, class t_s_bit_vector>
+	uint64_t isa_lsw<t_csa, t_bit_vector, t_r_bit_vector, t_s_bit_vector>::psi_k(uint64_t k, uint64_t i) const
 	{
 		if (k == 0)
 			return i;
@@ -268,8 +271,8 @@ namespace sdsl
 	}
 	
 	
-	template<class t_csa, class t_r_bit_vector, class t_s_bit_vector>
-	auto isa_lsw<t_csa, t_r_bit_vector, t_s_bit_vector>::operator[](size_type i) const -> value_type
+	template<class t_csa, class t_bit_vector, class t_r_bit_vector, class t_s_bit_vector>
+	auto isa_lsw<t_csa, t_bit_vector, t_r_bit_vector, t_s_bit_vector>::operator[](size_type i) const -> value_type
 	{
 		uint64_t const l(m_csa.m_partition_count);
 		size_type y(i / l);
@@ -281,8 +284,8 @@ namespace sdsl
 	}
 	
 	
-	template<class t_csa, class t_r_bit_vector, class t_s_bit_vector>
-	auto isa_lsw<t_csa, t_r_bit_vector, t_s_bit_vector>::serialize(std::ostream& out, structure_tree_node *v, std::string name) const -> size_type
+	template<class t_csa, class t_bit_vector, class t_r_bit_vector, class t_s_bit_vector>
+	auto isa_lsw<t_csa, t_bit_vector, t_r_bit_vector, t_s_bit_vector>::serialize(std::ostream& out, structure_tree_node *v, std::string name) const -> size_type
 	{
 		structure_tree_node *child(structure_tree::add_child(v, name, util::class_name(*this)));
 		size_type written_bytes(0);
@@ -303,8 +306,8 @@ namespace sdsl
 	}
 
 
-	template<class t_csa, class t_r_bit_vector, class t_s_bit_vector>
-	void isa_lsw<t_csa, t_r_bit_vector, t_s_bit_vector>::load(std::istream& in)
+	template<class t_csa, class t_bit_vector, class t_r_bit_vector, class t_s_bit_vector>
+	void isa_lsw<t_csa, t_bit_vector, t_r_bit_vector, t_s_bit_vector>::load(std::istream& in)
 	{
 		this->m_isa.load(in);
 		
