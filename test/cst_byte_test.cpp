@@ -42,7 +42,17 @@ cst_sct3<>,
          cst_sct3<cst_sct3<>::csa_type, lcp_support_sada<> >,
          cst_sct3<cst_sct3<>::csa_type, lcp_wt<> >,
          cst_sct3<cst_sct3<>::csa_type, lcp_support_tree<>, bp_support_g<> >,
-         cst_sct3<csa_bitcompressed<>, lcp_bitcompressed<> >
+         cst_sct3<csa_bitcompressed<>, lcp_bitcompressed<> >,
+         cst_sada<csa_bitcompressed<>, lcp_bitcompressed<>>,
+         cst_sada<csa_bitcompressed<>, lcp_support_sada<>>,
+         cst_sada<csa_rao<csa_rao_spec<2, 2>>, lcp_bitcompressed<>>,
+         cst_sada<csa_rao<csa_rao_spec<2, 4>>, lcp_bitcompressed<>>,
+         cst_sada<csa_rao<csa_rao_spec<4, 2>>, lcp_bitcompressed<>>,
+         cst_sada<csa_rao<csa_rao_spec<4, 4>>, lcp_bitcompressed<>>,
+         cst_sada<csa_rao<csa_rao_spec<2, 2>>, lcp_support_sada<>>,
+         cst_sada<csa_rao<csa_rao_spec<2, 4>>, lcp_support_sada<>>,
+         cst_sada<csa_rao<csa_rao_spec<4, 2>>, lcp_support_sada<>>,
+         cst_sada<csa_rao<csa_rao_spec<4, 4>>, lcp_support_sada<>>
          > Implementations;
 
 TYPED_TEST_CASE(cst_byte_test, Implementations);
