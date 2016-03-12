@@ -35,9 +35,6 @@ namespace sdsl
 		template<class t_csa_rao, class t_sa_buf_type>
 		void start_level(csa_rao_builder<t_csa_rao> &builder, uint8_t ll, t_sa_buf_type &sa_buf) {}
 		
-		template<class t_csa_rao>
-		void check_l_t(csa_rao_builder<t_csa_rao> &builder, uint64_t n, uint64_t l_t) {}
-		
 		template<class t_csa_rao, class t_psi_k_fn>
 		void finish_create_psi_k(csa_rao_builder<t_csa_rao> &builder, uint8_t ll, uint64_t k, uint64_t count, t_psi_k_fn &psi_k_fn) {}
 	};

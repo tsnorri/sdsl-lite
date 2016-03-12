@@ -98,17 +98,26 @@ namespace sdsl
 		csa_rao_builder(builder_type &&other) = default;
 		csa_rao_builder &operator=(csa_rao_builder const &) & = delete;
 		csa_rao_builder &operator=(csa_rao_builder &&) & = default;
+		
+		decltype(m_text_buf) const &text_buf() const { return m_text_buf; }
+		decltype(m_sa_buf) const &sa_buf() const { return m_sa_buf; }
 	
 		void build();
 		
 		// Called by build.
 		void create_alphabet();
-		void read_sa();
-		void check_parameters();
+		void read_text_and_sa();
+		void check_parameters(std::size_t const n);
 		void compress_sa();
 		
 		template<class t_sa_buf_type>
 		void compress_level(uint8_t const ll, t_sa_buf_type &sa_buf);
+		
+	protected:
+		template <typename t_vec>
+		static void open_and_read_vector_size(
+			t_vec const &, isfstream &stream, std::string const &file_name, std::size_t &size, uint8_t &width
+		);
 	};
 	
 
@@ -122,8 +131,7 @@ namespace sdsl
 		
 		{
 			auto event(memory_monitor::event("compress SA"));
-			read_sa();
-			check_parameters();
+			read_text_and_sa();
 			compress_sa();
 		}
 	}
@@ -139,21 +147,31 @@ namespace sdsl
 		typename t_csa_rao::size_type n(bwt_buf.size());
 		typename t_csa_rao::alphabet_type tmp_alphabet(bwt_buf, n);
 		
-		// Remove the effect of padding.
-		auto &orig_c(tmp_alphabet.get_C());
-		typename std::remove_reference<decltype(orig_c)>::type tmp_c(orig_c);
-		auto const padding = (orig_c[1] - 1);
-		for (typename decltype(tmp_c)::size_type i(1), size(tmp_c.size()); i < size; ++i)
-			 tmp_c[i] -= padding;
-		orig_c = tmp_c;
-
-		m_csa.m_padding = padding;
 		m_csa.m_alphabet.swap(tmp_alphabet);
 	}
 	
 	
 	template<class t_csa_rao>
-	void csa_rao_builder<t_csa_rao>::read_sa()
+	template <typename t_vec>
+	void csa_rao_builder<t_csa_rao>::open_and_read_vector_size(
+		t_vec const &, isfstream &stream, std::string const &file_name, std::size_t &size, uint8_t &width
+	)
+	{
+		auto status(open_file(stream, file_name));
+		if (!status)
+			throw std::runtime_error("Unable to open '" + file_name + "'");
+		
+		uint64_t file_size_bits(0);
+		t_vec::read_header(file_size_bits, width, stream);
+		auto const fixed_width(t_vec::fixed_int_width);
+		if (fixed_width)
+			width = fixed_width;
+		size = file_size_bits / width;
+	}
+	
+	
+	template<class t_csa_rao>
+	void csa_rao_builder<t_csa_rao>::read_text_and_sa()
 	{
 		auto const KEY_SA(conf::KEY_SA);
 		auto const KEY_TEXT(key_text_trait<t_csa_rao::alphabet_category::WIDTH>::KEY_TEXT);
@@ -161,19 +179,78 @@ namespace sdsl
 		assert(cache_file_exists(KEY_SA, m_config));
 		assert(cache_file_exists(KEY_TEXT, m_config));
 		
-		load_from_file(m_sa_buf, cache_file_name(KEY_SA, m_config));
-		load_from_file(m_text_buf, cache_file_name(KEY_TEXT, m_config));
+		// Check the text size.
+		isfstream text_stream;
+		isfstream sa_stream;
+		std::size_t text_size(0);
+		std::size_t sa_size(0);
+		uint8_t text_width(0);
+		uint8_t sa_width(0);
+		
+		open_and_read_vector_size(m_text_buf, text_stream, cache_file_name(KEY_TEXT, m_config), text_size, text_width);
+		
+		// Calculate the padding and load the text and SA.
+		check_parameters(text_size);
+		auto padding(m_csa.padding());
+		
+		{
+			text_stream.seekg(0);
+			m_text_buf.load(text_stream, text_width * padding);
+			text_stream.close();
+			
+			if (padding)
+				std::fill(m_text_buf.end() - padding, m_text_buf.end(), 0);
+		}
+		
+		open_and_read_vector_size(m_sa_buf, sa_stream, cache_file_name(KEY_SA, m_config), sa_size, sa_width);
+
+		{
+			sa_stream.seekg(0);
+			m_sa_buf.load(sa_stream, sa_width * padding);
+			sa_stream.close();
+			
+			if (padding)
+			{
+				auto const sa_max(text_size - 1 + padding);
+				if (sa_max <= m_sa_buf.max_value())
+					std::move_backward(m_sa_buf.begin(), m_sa_buf.end() - padding, m_sa_buf.end());
+				else
+				{
+					using std::swap;
+
+					// Calculate the bits needed to represent sa_max.
+					auto sa_bits(sa_max);
+					
+					{
+						--sa_bits;
+						sa_bits <<= 1;
+						sa_bits = 1 + bits::hi(sa_bits);
+						// Round up the number of bits to the next power of two.
+						--sa_bits;
+						sa_bits <<= 1;
+						sa_bits = bits::hi(sa_bits);
+						sa_bits = 1 << sa_bits;
+					}
+
+					int_vector<0> tmp(m_sa_buf.size(), 0, sa_bits);
+					swap(tmp, m_sa_buf);
+					
+					std::copy(tmp.begin(), tmp.end() - padding, m_sa_buf.begin() + padding);
+				}
+
+				for (decltype(padding) i(0); i < padding; ++i)
+					m_sa_buf[i] = text_size - 1 + (padding - i);
+			}
+		}
 	}
 	
 	
 	template<class t_csa_rao>
-	void csa_rao_builder<t_csa_rao>::check_parameters()
+	void csa_rao_builder<t_csa_rao>::check_parameters(std::size_t const n)
 	{
 		// Initialize the remaining instance variables;
 		// set suitable values for t (m_level_count) and l (m_partition_count).
 		
-		auto const n(m_text_buf.size());
-	
 		if (0 == m_csa.m_level_count)
 			m_csa.m_level_count = 1;
 		
@@ -181,19 +258,28 @@ namespace sdsl
 		{
 			auto const start(std::ceil(std::pow(std::log2(n), 1.0 / (1 + m_csa.m_level_count))));
 			m_csa.m_partition_count = util::find_divisor(n, (start < 1 ? 1 : start));
+			assert(m_csa.m_partition_count);
 		}
 
 		uint64_t const partitions(m_csa.m_partition_count);
 		uint64_t const l_t(util::ipow(partitions, m_csa.m_level_count));
-		m_delegate.check_l_t(*this, n, l_t);
 		
-		// Assume that the size of the text is a multiple of partitions^levels.
-		// (We can't easily make sure of this by e.g. adding ending characters in sdsl::construct.)
-		assert(! (0 == m_csa.m_level_count || 0 == m_csa.m_partition_count));
-		assert(0 == n % l_t);
-	
-		auto const d_item_bits(std::log2(m_csa.m_partition_count)); // Each item in d is l - (SA[i] mod l) ≤ l (3).
-		m_d_size = std::max(static_cast<uint8_t>(8), static_cast<uint8_t>(util::upper_power_of_2(d_item_bits))); // Round up to 8, 16, 32, 64.
+		// Calculate padding.
+		if (n <= l_t)
+			m_csa.m_padding = l_t - n;
+		else
+		{
+			auto const rem(n % l_t);
+			if (rem)
+				m_csa.m_padding = l_t - rem;
+			else
+				m_csa.m_padding = 0;
+		}
+		
+		// Each item in d is l - (SA[i] mod l) ≤ l (3).
+		uint64_t const d_item_bits(std::ceil(std::log2(partitions)));
+		// Round up to 8, 16, 32, 64.
+		m_d_size = std::max(static_cast<uint8_t>(8), static_cast<uint8_t>(util::upper_power_of_2(d_item_bits)));
 	
 		typename t_csa_rao::template array<typename t_csa_rao::level> levels;
 		levels.reserve(m_csa.m_level_count);
@@ -205,7 +291,7 @@ namespace sdsl
 	void csa_rao_builder<t_csa_rao>::compress_sa()
 	{
 		compress_level(0, m_sa_buf);
-		m_sa_buf.resize(0);
+		// Both buffers may still be needed for isa_lsw construction.
 		for (uint8_t ll(1); ll < m_csa.m_level_count; ++ll)
 			compress_level(ll, m_csa.m_sa);
 	}
