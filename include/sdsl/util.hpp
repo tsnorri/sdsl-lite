@@ -378,15 +378,15 @@ struct is_regular : std::integral_constant< bool,
 
 //==================== Math functions ========================
 //! Floor of binary logarithm.
-template<typename T>
+template<typename T, typename = typename std::enable_if<std::is_unsigned<T>::value>::type>
 T log2_floor(T const val);
 
 //! Ceiling of binary logarithm.
-template<typename T>
+template<typename T, typename = typename std::enable_if<std::is_unsigned<T>::value>::type>
 T log2_ceil(T const val);
 
 //! Power of 2 greater or equal to val.
-template<typename T>
+template<typename T, typename = typename std::enable_if<std::is_unsigned<T>::value>::type>
 T upper_power_of_2(T const val);
 
 //! Integer power function.
@@ -665,14 +665,14 @@ std::string util::to_latex_string(const T& t)
     return to_string(t);
 }
 
-template<typename T>
-T log2_floor(T const val)
+template<typename T, typename>
+T util::log2_floor(T const val)
 {
     return bits::hi(val);
 }
 
-template<typename T>
-T log2_ceil(T const val)
+template<typename T, typename>
+T util::log2_ceil(T const val)
 {
     if (0 == val)
         return 0;
@@ -680,7 +680,7 @@ T log2_ceil(T const val)
     return bits::hi((val - 1) << 1);
 }
 
-template<typename T>
+template<typename T, typename>
 T util::upper_power_of_2(T const val)
 {
     switch (val)
