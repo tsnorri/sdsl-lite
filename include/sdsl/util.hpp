@@ -377,6 +377,14 @@ struct is_regular : std::integral_constant< bool,
         std::is_move_assignable<T>::value > {};
 
 //==================== Math functions ========================
+//! Floor of binary logarithm.
+template<typename T>
+T log2_floor(T const val);
+
+//! Ceiling of binary logarithm.
+template<typename T>
+T log2_ceil(T const val);
+
 //! Power of 2 greater or equal to val.
 template<typename T>
 T upper_power_of_2(T const val);
@@ -655,6 +663,21 @@ template<typename T>
 std::string util::to_latex_string(const T& t)
 {
     return to_string(t);
+}
+
+template<typename T>
+T log2_floor(T const val)
+{
+    return bits::hi(val);
+}
+
+template<typename T>
+T log2_ceil(T const val)
+{
+    if (0 == val)
+        return 0;
+
+    return bits::hi((val - 1) << 1);
 }
 
 template<typename T>

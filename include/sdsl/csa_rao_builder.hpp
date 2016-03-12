@@ -277,7 +277,7 @@ namespace sdsl
 		}
 		
 		// Each item in d is l - (SA[i] mod l) ≤ l (3).
-		uint64_t const d_item_bits(std::ceil(std::log2(partitions)));
+		uint64_t const d_item_bits(util::log2_ceil(partitions));
 		// Round up to 8, 16, 32, 64.
 		m_d_size = std::max(static_cast<uint8_t>(8), static_cast<uint8_t>(util::upper_power_of_2(d_item_bits)));
 	
