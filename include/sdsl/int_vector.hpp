@@ -489,7 +489,7 @@ class int_vector
                             std::string name = "", bool write_fixed_as_variable=false) const;
 
         //! Load the int_vector for a stream.
-        void load(std::istream& in);
+        void load(std::istream& in, size_type extra_space = 0);
 
         //! non const version of [] operator
         /*! \param i Index the i-th integer of length width().
@@ -1556,12 +1556,12 @@ typename int_vector<t_width>::size_type int_vector<t_width>::serialize(std::ostr
 }
 
 template<uint8_t t_width>
-void int_vector<t_width>::load(std::istream& in)
+void int_vector<t_width>::load(std::istream& in, size_type extra_space)
 {
     size_type size;
     int_vector<t_width>::read_header(size, m_width, in);
 
-    bit_resize(size);
+    bit_resize(size + extra_space);
     uint64_t* p = m_data;
     size_type idx = 0;
     while (idx+conf::SDSL_BLOCK_SIZE < (capacity()>>6)) {
