@@ -379,7 +379,7 @@ namespace sdsl
 	template<class t_spec>
 	void csa_rao<t_spec>::level::load(std::istream &in, partition_count_type partition_count)
 	{
-		this->m_partitions.resize(partition_count);
+		this->m_partitions.resize(partition_count - 1);
 		for (decltype(partition_count) i(0); i < partition_count - 1; ++i)
 			this->m_partitions[i].load(in);
 		
