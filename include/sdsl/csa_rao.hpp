@@ -397,7 +397,7 @@ namespace sdsl
 		builder_type builder(*this, config);
 		builder.build();
 		
-		isa_type isa_tmp(*this, config);
+		isa_type isa_tmp(*this, builder, config);
 		m_isa = std::move(isa_tmp);
 	}
 	

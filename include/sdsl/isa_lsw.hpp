@@ -105,7 +105,7 @@ namespace sdsl
 	public:
 		isa_lsw() = delete; // A CSA is needed.
 	
-		isa_lsw(t_csa const &csa, cache_config& config);
+		isa_lsw(t_csa const &csa, csa_rao_builder<t_csa> const &builder, cache_config& config);
 	
 		isa_lsw(t_csa const &csa):
 			base_class::isa_lsw_base(),
@@ -193,26 +193,20 @@ namespace sdsl
 	
 	
 	template<class t_csa, class t_bit_vector, class t_r_bit_vector, class t_s_bit_vector>
-	isa_lsw<t_csa, t_bit_vector, t_r_bit_vector, t_s_bit_vector>::isa_lsw(t_csa const &csa, cache_config& config):
+	isa_lsw<t_csa, t_bit_vector, t_r_bit_vector, t_s_bit_vector>::isa_lsw(
+		t_csa const &csa, csa_rao_builder<t_csa> const &builder, cache_config& config
+	):
 		isa_lsw(csa)
 	{
 		// Access the text and the suffix array. m_csa could be used instead.
-		auto const KEY_SA(conf::KEY_SA);
-		auto const KEY_TEXT(key_text_trait<t_csa::alphabet_category::WIDTH>::KEY_TEXT);
-		
-		assert(cache_file_exists(KEY_SA, config));
-		assert(cache_file_exists(KEY_TEXT, config));
-
-		int_vector<> sa_buf;
-		int_vector<t_csa::alphabet_type::int_width> text_buf;
-		
-		load_from_file(sa_buf, cache_file_name(KEY_SA, config));
-		load_from_file(text_buf, cache_file_name(KEY_TEXT, config));
+		int_vector<> sa_buf(builder.sa_buf());
+		int_vector<t_csa::alphabet_type::int_width> text_buf(builder.text_buf());
 		
 		uint64_t const l(m_csa.m_partition_count);
 		
 		{
 			uint64_t const n(sa_buf.size());
+			assert(0 == n % l);
 			decltype(this->m_isa) isa_tmp(n / l, 0);
 			for (uint64_t i(0); i < n; ++i)
 			{
