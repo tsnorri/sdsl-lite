@@ -128,5 +128,17 @@ std::string tmp_file(const std::string& filename, std::string name_part)
            util::to_string(util::id()) + name_part + ".sdsl";
 }
 
+bool open_file(isfstream &stream, std::string const &file)
+{
+    stream.open(file, std::ios::binary | std::ios::in);
+    if (!stream) {
+        if (util::verbose) {
+            std::cerr << "Could not load file `" << file << "`" << std::endl;
+        }
+        return false;
+    }
+    return true;
+}
+
 }// end namespace sdsl
 
