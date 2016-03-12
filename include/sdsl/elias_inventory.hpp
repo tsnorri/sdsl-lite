@@ -182,9 +182,9 @@ namespace sdsl {
 		
 		// Rao's lemma 1.
 		// Calculate the minimum number of bits.
-		size_type const bits(std::ceil(std::log2(max_sum)));
+		size_type const bits(util::log2_ceil(max_sum));
 		// Grossi and Vitter use floor (lemma 2), Rao uses ceil (lemma 1).
-		size_type const high_bits(std::floor(std::log2(total_count)));
+		size_type const high_bits(util::log2_floor(total_count));
 		decltype(this->m_low_bits) low_bits = bits - high_bits;
 		bit_vector high_values(2 * total_count, 0); // Size from lemma 1.
 		int_vector<0> low_values(total_count, 0, util::upper_power_of_2(low_bits));
