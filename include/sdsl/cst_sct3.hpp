@@ -678,7 +678,7 @@ class cst_sct3
 
         node_type select_child(const node_type& v, size_type i)const
         {
-            assert(i > 0);
+            //assert(i > 0);
             if (is_leaf(v))  // if v is a leave, v has no child
                 return root();
             if (1 == i) {
