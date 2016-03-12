@@ -50,7 +50,15 @@ cst_sct3<tCSA1, lcp_bitcompressed<> >,
          cst_sct3<tCSA1, lcp_support_tree<>, bp_support_g<> >,
          cst_sada<tCSA3, lcp_dac<> >,
          cst_sct3<tCSA1, lcp_support_sada<> >,
-         cst_sct3<tCSA1, lcp_wt<> >
+         cst_sct3<tCSA1, lcp_wt<> >,
+         cst_sada<csa_rao<csa_rao_spec<2, 2, int_alphabet<>>>, lcp_bitcompressed<>>,
+         cst_sada<csa_rao<csa_rao_spec<2, 4, int_alphabet<>>>, lcp_bitcompressed<>>,
+         cst_sada<csa_rao<csa_rao_spec<4, 2, int_alphabet<>>>, lcp_bitcompressed<>>,
+         cst_sada<csa_rao<csa_rao_spec<4, 4, int_alphabet<>>>, lcp_bitcompressed<>>,
+         cst_sada<csa_rao<csa_rao_spec<2, 2, int_alphabet<>>>, lcp_support_sada<>>,
+         cst_sada<csa_rao<csa_rao_spec<2, 4, int_alphabet<>>>, lcp_support_sada<>>,
+         cst_sada<csa_rao<csa_rao_spec<4, 2, int_alphabet<>>>, lcp_support_sada<>>,
+         cst_sada<csa_rao<csa_rao_spec<4, 4, int_alphabet<>>>, lcp_support_sada<>>
          > Implementations;
 
 TYPED_TEST_CASE(cst_int_test, Implementations);
