@@ -660,8 +660,19 @@ std::string util::to_latex_string(const T& t)
 template<typename T>
 T util::upper_power_of_2(T const val)
 {
-    // Adapted from http://graphics.stanford.edu/~seander/bithacks.html#RoundUpPowerOf2
-    return static_cast<T>(1 << static_cast<uint8_t>(std::ceil(std::log2(val))));
+    switch (val)
+    {
+        case 0:
+            return 0;
+
+        case 1:
+            return 1;
+
+        default:
+            T const retval(1 << (1 + bits::hi(val - 1)));
+            assert(val <= retval);
+            return retval;
+    }
 }
 
 template<class t_text_buf, class t_alphabet>
