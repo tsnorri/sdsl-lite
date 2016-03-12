@@ -735,6 +735,8 @@ bool store_to_checked_file(const int_vector<t_width>& v, const std::string& file
     return store_to_file(v, file, write_fixed_as_variable);
 }
 
+bool open_file(isfstream &stream, std::string const &file);
+
 template<class T>
 bool load_from_file(T& v, const std::string& file)
 {
