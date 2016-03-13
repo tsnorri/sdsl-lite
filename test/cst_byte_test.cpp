@@ -370,6 +370,7 @@ TYPED_TEST(cst_byte_test, child)
     }
 }
 
+#if 0
 TYPED_TEST(cst_byte_test, edge)
 {
     TypeParam cst;
@@ -391,6 +392,7 @@ TYPED_TEST(cst_byte_test, edge)
         }
     }
 }
+#endif
 
 TYPED_TEST(cst_byte_test, leftmost_rightmost_leaf)
 {
