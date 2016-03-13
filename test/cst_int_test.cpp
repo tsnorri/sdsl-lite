@@ -348,6 +348,7 @@ TYPED_TEST(cst_int_test, child)
     }
 }
 
+#if 0
 TYPED_TEST(cst_int_test, edge)
 {
     TypeParam cst;
@@ -369,6 +370,7 @@ TYPED_TEST(cst_int_test, edge)
         }
     }
 }
+#endif
 
 TYPED_TEST(cst_int_test, leftmost_rightmost_leaf)
 {
