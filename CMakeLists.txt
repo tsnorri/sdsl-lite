@@ -30,7 +30,7 @@ option(GENERATE_DOC "Set ON to genrate doxygen API reference in build/doc direct
 if(NOT CMAKE_CXX_COMPILER_VERSION) # work around for cmake versions smaller than 2.8.10
     execute_process(COMMAND ${CMAKE_CXX_COMPILER} -dumpversion OUTPUT_VARIABLE CMAKE_CXX_COMPILER_VERSION)
 endif()
-if(CMAKE_CXX_COMPILER MATCHES ".*clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+if(CMAKE_CXX_COMPILER MATCHES ".*clang.*" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
       set(CMAKE_COMPILER_IS_CLANGXX 1)
 endif()
 if( (CMAKE_COMPILER_IS_GNUCXX AND ${CMAKE_CXX_COMPILER_VERSION} VERSION_LESS 4.7) OR
@@ -48,7 +48,11 @@ if( CMAKE_COMPILER_IS_GNUCXX )
     endif()
       
 else()
-	if(MSVC)
+    if( CMAKE_COMPILER_IS_CLANGXX )
+		append_cxx_compiler_flags("-std=c++11 -DNDEBUG" "CLANG" CMAKE_CXX_FLAGS)
+		append_cxx_compiler_flags("-stdlib=libc++" "CLANG" CMAKE_CXX_FLAGS)
+		append_cxx_compiler_flags("-O3 -ffast-math -funroll-loops -D__extern_always_inline=\"extern __always_inline\" " "CLANG" CMAKE_CXX_OPT_FLAGS)
+	else()
 		append_cxx_compiler_flags("/EHsc" "MSVC" CMAKE_CXX_FLAGS)
 		append_cxx_compiler_flags("/Od" "MSVC" CMAKE_CXX_FLAGS_DEBUG)
 		append_cxx_compiler_flags("/Ox" "MSVC" CMAKE_CXX_FLAGS_RELEASE)
@@ -58,10 +62,6 @@ else()
         endforeach(var)
         
 		add_definitions("/DMSVC_COMPILER")
-	else()
-		append_cxx_compiler_flags("-std=c++11 -DNDEBUG" "CLANG" CMAKE_CXX_FLAGS)
-		append_cxx_compiler_flags("-stdlib=libc++" "CLANG" CMAKE_CXX_FLAGS)
-		append_cxx_compiler_flags("-O3 -ffast-math -funroll-loops" "CLANG" CMAKE_CXX_OPT_FLAGS)
 	endif()
 endif()
 

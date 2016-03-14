@@ -1,7 +1,7 @@
 SDSL - Succinct Data Structure Library
 =========
 
-[![Build Status](https://webapi.biicode.com/v1/badges/fenix/fenix/sdsl-lite/master)](https://www.biicode.com/fenix/sdsl-lite)
+[![Build Status](https://travis-ci.org/simongog/sdsl-lite.svg?branch=master)](https://travis-ci.org/simongog/sdsl-lite)
 
 What is it?
 -----------
@@ -165,11 +165,11 @@ The [test](./test) directory contains test code. We use [googletest][GTEST]
 framework and [make][MAKE] to run the tests. See the README file in the
 directory for details.
 
-To simply run all unit tests type
+To simply run all unit tests after installing the library type
 
 ```sh
-cd sdsl-lite/test
-make
+cd sdsl-lite/build
+make test-sdsl
 ```
 
 Note: Running the tests requires several sample files to be downloaded from the web
