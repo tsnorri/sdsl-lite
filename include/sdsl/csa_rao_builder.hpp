@@ -19,7 +19,7 @@
 
 #include <sdsl/csa_alphabet_strategy.hpp>
 #include <sdsl/int_vector.hpp>
-#include <sdsl/psi_k_index.hpp>
+#include <sdsl/isa_simple.hpp>
 
 
 namespace sdsl
@@ -67,7 +67,7 @@ namespace sdsl
 				t_builder &builder,
 				uint32_t partition,
 				uint64_t i,
-				typename psi_k_index<t_sa_buf>::value_type &psi_k,
+				typename isa_simple<t_sa_buf>::value_type &psi_k,
 				typename t_builder::text_range &j
 			);
 		};
@@ -306,14 +306,14 @@ namespace sdsl
 	template<class t_csa_rao>
 	template <class t_builder, class t_sa_buf>
 	bool csa_rao_builder<t_csa_rao>::psi_k_support_builder_delegate<t_builder, t_sa_buf>::psi_k(
-		t_builder &builder, uint32_t partition, uint64_t i, typename psi_k_index<t_sa_buf>::value_type &psi_k, typename t_builder::text_range &j
+		t_builder &builder, uint32_t partition, uint64_t i, typename isa_simple<t_sa_buf>::value_type &psi_k, typename t_builder::text_range &j
 	)
 	{
 		// Only consider the values that belong to the subsequences {Ψ_k(i) | d[i] = k} (3 (4), p. 310).
 		if (m_d_values[i] != partition)
 			return false;
 
-		psi_k = builder.psi_k_fn()(partition, i);
+		psi_k = builder.isa().psi_k(partition, i);
 		assert(psi_k); // psi_k shouldn't be zero here.
 
 		// Calculate j for L^k_j in Lemma 3, i.e. the value in base-σ of the
@@ -338,8 +338,8 @@ namespace sdsl
 		typename t_csa_rao::template array<typename t_csa_rao::psi_k_support_type> partitions;
 		partitions.reserve(m_csa.m_partition_count);
 	
-		// Specialization of psi_k for the current level.
-		psi_k_index<t_sa_buf_type> psi_k_fn(m_config, sa_buf);
+		// Specialization of isa_simple for the current level.
+		isa_simple<t_sa_buf_type> isa(m_config, sa_buf);
 		
 		uint64_t const n(sa_buf.size());
 		std::vector<typename t_sa_buf_type::value_type> sa_ll; // SA_n, calculated with 1-based indices.
@@ -375,7 +375,7 @@ namespace sdsl
 		// (3 (4)) Create Ψ_k and compress it.
 		// m_sa may still be used via sa_buf.
 		{
-			auto builder(construct_psi_k_support_builder(m_csa, m_text_buf, sa_buf, m_csa.m_alphabet, psi_k_fn));
+			auto builder(construct_psi_k_support_builder(m_csa, m_text_buf, sa_buf, m_csa.m_alphabet, isa));
 			psi_k_support_builder_delegate<decltype(builder), decltype(sa_buf)> delegate(d_values, ll);
 		
 			for (uint64_t k(1); k < m_csa.m_partition_count; ++k)

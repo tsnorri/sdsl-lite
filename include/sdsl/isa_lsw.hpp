@@ -20,7 +20,7 @@
 #include <sdsl/elias_inventory.hpp>
 #include <sdsl/int_vector.hpp>
 #include <sdsl/iterators.hpp>
-#include <sdsl/psi_k_index.hpp>
+#include <sdsl/isa_simple.hpp>
 #include <sdsl/psi_k_support.hpp>
 #include <sdsl/psi_k_support_builder.hpp>
 #include <sdsl/select_support.hpp>
@@ -94,7 +94,7 @@ namespace sdsl
 				t_builder &builder,
 				uint32_t partition,
 				uint64_t i,
-				typename psi_k_index<t_sa_buf>::value_type &psi_k,
+				typename isa_simple<t_sa_buf>::value_type &psi_k,
 				typename t_builder::text_range &j
 			);
 		};
@@ -172,14 +172,14 @@ namespace sdsl
 		t_builder &builder,
 		uint32_t partition,
 		uint64_t i,
-		typename psi_k_index<t_sa_buf>::value_type &psi_k,
+		typename isa_simple<t_sa_buf>::value_type &psi_k,
 		typename t_builder::text_range &j
 	)
 	{
 		auto val(builder.sa_buf()[i]);
 		if (0 == val % m_l)
 		{
-			psi_k = builder.psi_k_fn().from_sa_val(partition, val);
+			psi_k = builder.isa().psi_k_from_sa_val(partition, val);
 			if (psi_k)
 			{
 				auto pos(builder.csa().sa(psi_k - 1, 0));
@@ -220,10 +220,10 @@ namespace sdsl
 
 		{
 			// Lemma 2.
-			psi_k_index<decltype(sa_buf)> psi_k_fn(config, sa_buf);
+			isa_simple<decltype(sa_buf)> isa(config, sa_buf);
 			
 			this->m_psi_k_support.reserve(l - 1);
-			auto builder(construct_psi_k_support_builder(m_csa, text_buf, sa_buf, m_csa.m_alphabet, psi_k_fn));
+			auto builder(construct_psi_k_support_builder(m_csa, text_buf, sa_buf, m_csa.m_alphabet, isa));
 			
 			psi_k_support_builder_delegate<decltype(builder), decltype(sa_buf)> delegate(l);
 			for (uint64_t k(1); k < l; ++k)

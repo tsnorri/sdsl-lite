@@ -14,72 +14,72 @@
  along with this program.  If not, see http://www.gnu.org/licenses/ .
  */
 
-#ifndef INCLUDED_SDSL_PSI_K_INDEX
-#define INCLUDED_SDSL_PSI_K_INDEX
+#ifndef INCLUDED_SDSL_ISA_SIMPLE
+#define INCLUDED_SDSL_ISA_SIMPLE
 
 #include <sdsl/int_vector.hpp>
 
 
 namespace sdsl
 {
-	//! An index for calculating Ψ_k.
+	//! A simple ISA.
 	template<class t_sa_buf_type>
-	class psi_k_index
+	class isa_simple
 	{
 	public:
 		typedef uint64_t value_type;
 	protected:
 		t_sa_buf_type &m_sa_buf; // Check that psi_k object lifetime does not exceed that of sa_buf.
-		int_vector<0> m_psi_idx;
+		int_vector<0> m_isa;
 	
 	public:
-		psi_k_index() = delete;
-		psi_k_index(psi_k_index const &) = delete;
-		psi_k_index(psi_k_index &&) = delete;
-		psi_k_index &operator=(psi_k_index const &) = delete;
-		psi_k_index &operator=(psi_k_index &&) = delete;
+		isa_simple() = delete;
+		isa_simple(isa_simple const &) = delete;
+		isa_simple(isa_simple &&) = delete;
+		isa_simple &operator=(isa_simple const &) = delete;
+		isa_simple &operator=(isa_simple &&) = delete;
 		
-		psi_k_index(cache_config& config, t_sa_buf_type &sa_buf):
+		isa_simple(cache_config& config, t_sa_buf_type &sa_buf):
 			m_sa_buf(sa_buf)
 		{
 			auto const count(m_sa_buf.size());
-			int_vector<0> psi_idx_tmp(count, 0, 1 + bits::hi(count));
+			int_vector<0> isa_tmp(count, 0, 1 + bits::hi(count));
 		
 			for (uint64_t i(0); i < count; ++i)
 			{
-				assert(i <= psi_idx_tmp.max_value());
-				psi_idx_tmp[m_sa_buf[i]] = i;
+				assert(i <= isa_tmp.max_value());
+				isa_tmp[m_sa_buf[i]] = i;
 			}
 		
-			m_psi_idx = std::move(psi_idx_tmp);
+			m_isa = std::move(isa_tmp);
 		}
 		
-		int_vector<0> &psi_idx() { return m_psi_idx; }
+		int_vector<0> &isa() { return m_isa; }
 	
 		// Accessors return values in range [0, n], i.e. 1-based indices.
-		value_type from_sa_val(uint64_t k, uint64_t v);
+		value_type psi_k_from_sa_val(uint64_t k, uint64_t v);
 			
-		value_type operator()(uint64_t k, uint64_t i);
+		value_type psi_k(uint64_t k, uint64_t i);
 	};
 	
 	
 	// Accessors return values in range [0, n], i.e. 1-based indices.
 	template<class t_sa_buf_type>
-	auto psi_k_index<t_sa_buf_type>::from_sa_val(uint64_t k, uint64_t v) -> value_type
+	auto isa_simple<t_sa_buf_type>::psi_k_from_sa_val(uint64_t k, uint64_t v) -> value_type
 	{
 		v += k;
 		if (v < m_sa_buf.size())
-			return 1 + m_psi_idx[v];
+			return 1 + m_isa[v];
 		else
 			return 0;
 	}
 	
 	
 	template<class t_sa_buf_type>
-	auto psi_k_index<t_sa_buf_type>::operator()(uint64_t k, uint64_t i) -> value_type
+	auto isa_simple<t_sa_buf_type>::psi_k(uint64_t k, uint64_t i) -> value_type
 	{
 		auto v(m_sa_buf[i]);
-		return from_sa_val(k, v);
+		return psi_k_from_sa_val(k, v);
 	}
 }
 

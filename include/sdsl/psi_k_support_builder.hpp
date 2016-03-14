@@ -20,7 +20,7 @@
 #include <cstdint>
 #include <sdsl/elias_inventory.hpp>
 #include <sdsl/int_vector.hpp>
-#include <sdsl/psi_k_index.hpp>
+#include <sdsl/isa_simple.hpp>
 
 
 namespace sdsl
@@ -46,7 +46,7 @@ namespace sdsl
 		{
 		public:
 			int_vector<0>::size_type stored_count(t_builder &builder, uint32_t partition) { return 0; }
-			bool psi_k(t_builder &builder, uint32_t partition, uint64_t i, typename psi_k_index<t_sa_buf>::value_type &psi_k, t_builder::text_range &j) { return false; }
+			bool psi_k(t_builder &builder, uint32_t partition, uint64_t i, typename isa_simple<t_sa_buf>::value_type &psi_k, t_builder::text_range &j) { return false; }
 		};
 	*/
 	// TODO: verify time and space complexity.
@@ -55,26 +55,26 @@ namespace sdsl
 		class t_text_buf,
 		class t_sa_buf,
 		class t_alphabet,
-		class t_psi_k_fn
+		class t_isa
 	>
 	class psi_k_support_builder
 	{
 	public:
-		typedef psi_k_support_builder<t_csa, t_text_buf, t_sa_buf, t_alphabet, t_psi_k_fn> builder_type;
+		typedef psi_k_support_builder<t_csa, t_text_buf, t_sa_buf, t_alphabet, t_isa> builder_type;
 		
 	public:
 		t_csa const &m_csa;
 		t_text_buf &m_text_buf;
 		t_sa_buf &m_sa_buf;
 		t_alphabet const &m_alphabet;
-		t_psi_k_fn &m_psi_k_fn;
+		t_isa &m_isa;
 		
 	public:
 		t_csa const			&csa() const { return m_csa; }
 		t_text_buf			&text_buf() { return m_text_buf; }
 		t_sa_buf			&sa_buf() { return m_sa_buf; }
 		t_alphabet const	&alphabet() { return m_alphabet; }
-		t_psi_k_fn			&psi_k_fn() { return m_psi_k_fn; }
+		t_isa				&isa() { return m_isa; }
 		
 		psi_k_support_builder() = delete;
 		psi_k_support_builder(psi_k_support_builder const &) = delete;
@@ -88,13 +88,13 @@ namespace sdsl
 			t_text_buf &text_buf,
 			t_sa_buf &sa_buf,
 			t_alphabet const &alphabet,
-			t_psi_k_fn &psi_k_fn
+			t_isa &isa
 		):
 			m_csa(csa),
 			m_text_buf(text_buf),
 			m_sa_buf(sa_buf),
 			m_alphabet(alphabet),
-			m_psi_k_fn(psi_k_fn)
+			m_isa(isa)
 		{
 		}
 		
@@ -232,7 +232,7 @@ namespace sdsl
 			
 			for (uint64_t i(0), count(m_sa_buf.size()); i < count; ++i)
 			{
-				typename psi_k_index<t_sa_buf>::value_type psi_k_i(0);
+				typename isa_simple<t_sa_buf>::value_type psi_k_i(0);
 				text_range j(m_text_buf);
 				
 				// psi_k_i and j are out-paramteres.
@@ -322,23 +322,23 @@ namespace sdsl
 		class t_text_buf,
 		class t_sa_buf,
 		class t_alphabet,
-		class t_psi_k_fn
+		class t_isa
 	>
 	auto construct_psi_k_support_builder(
 		t_csa const &csa,
 		t_text_buf &text_buf,
 		t_sa_buf &sa_buf,
 		t_alphabet const &alphabet,
-		t_psi_k_fn &psi_k_fn
-	) -> psi_k_support_builder<t_csa, t_text_buf, t_sa_buf, t_alphabet, t_psi_k_fn>
+		t_isa &isa
+	) -> psi_k_support_builder<t_csa, t_text_buf, t_sa_buf, t_alphabet, t_isa>
 	{
 		psi_k_support_builder<
 			t_csa,
 			t_text_buf,
 			t_sa_buf,
 			t_alphabet,
-			t_psi_k_fn
-		> retval(csa, text_buf, sa_buf, alphabet, psi_k_fn);
+			t_isa
+		> retval(csa, text_buf, sa_buf, alphabet, isa);
 		return retval;
 	}
 }
