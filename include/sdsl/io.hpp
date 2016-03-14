@@ -560,14 +560,6 @@ std::string cache_file_name(const std::string& key,const cache_config& config)
  */
 void register_cache_file(const std::string& key, cache_config& config);
 
-//! Unregister a resource specified by the key from the cache
-/*!
- *  \param key        Resource key.
- *  \param config    Cache configuration.
- *
- */
-void unregister_cache_file(const std::string& key, cache_config& config);
-
 //! Checks if the resource specified by the key exists in the cache.
 /*!
   \param key    Resource key.

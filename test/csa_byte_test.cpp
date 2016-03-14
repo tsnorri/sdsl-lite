@@ -12,36 +12,15 @@ using namespace std;
 
 typedef int_vector<>::size_type size_type;
 
+tMSS   test_case_file_map;
 string test_file;
 string temp_file;
 string temp_dir;
 bool in_memory;
 
-class csa_byte_test_base : public ::testing::Test
-{
-protected:
-    static cache_config s_config;
-
-public:
-    static void SetupTestCase()
-    {
-    }
-    
-    static void TearDownTestCase()
-    {
-        // csa_rao handles multiple zero symbols but other classes may not.
-        util::delete_all_files(s_config.file_map);
-    }
-};
-
 template<class T>
-class csa_byte_test : public csa_byte_test_base
-{
-protected:
-    using csa_byte_test_base::s_config;
-};
+class csa_byte_test : public ::testing::Test { };
 
-cache_config csa_byte_test_base::s_config = {};
 
 using testing::Types;
 
@@ -76,8 +55,9 @@ TYPED_TEST(csa_byte_test, create_and_store_test)
 {
     static_assert(sdsl::util::is_regular<TypeParam>::value, "Type is not regular");
     TypeParam csa;
-    csa_byte_test_base::s_config = cache_config(false, temp_dir, util::basename(test_file));
-    construct(csa, test_file, csa_byte_test_base::s_config, 1);
+    cache_config config(false, temp_dir, util::basename(test_file));
+    construct(csa, test_file, config, 1);
+    test_case_file_map = config.file_map;
     ASSERT_TRUE(store_to_file(csa, temp_file));
 }
 
@@ -164,13 +144,11 @@ TYPED_TEST(csa_byte_test, sa_access)
     TypeParam csa;
     ASSERT_TRUE(load_from_file(csa, temp_file));
     int_vector<> sa;
-    load_from_file(sa, csa_byte_test_base::s_config.file_map[conf::KEY_SA]);
-    size_type n = 1 + util::file_size(test_file);
+    load_from_file(sa, test_case_file_map[conf::KEY_SA]);
+    size_type n = sa.size();
     ASSERT_EQ(n, csa.size());
-    // csa_rao may have padding, remove its effect.
-    auto const padding(csa.padding());
     for (size_type j=0; j<n; ++j) {
-        ASSERT_EQ(sa[j + padding], csa[j])<<" j="<<j;
+        ASSERT_EQ(sa[j], csa[j])<<" j="<<j;
     }
 }
 
@@ -183,17 +161,14 @@ TYPED_TEST(csa_byte_test, isa_access)
     size_type n = 0;
     {
         int_vector<> sa;
-        load_from_file(sa, csa_byte_test_base::s_config.file_map[conf::KEY_SA]);
-        n = 1 + util::file_size(test_file);
+        load_from_file(sa, test_case_file_map[conf::KEY_SA]);
+        n = sa.size();
         ASSERT_EQ(n, csa.size());
         isa = sa;
-        // csa_rao may have padding, remove its effect.
-        auto const padding(csa.padding());
         for (size_type j=0; j<n; ++j) {
-            isa[sa[j + padding]] = j;
+            isa[sa[j]] = j;
         }
     }
-    
     for (size_type j=0; j<n; ++j) {
         ASSERT_EQ(isa[j], csa.isa[j])<<" j="<<j;
     }
@@ -202,13 +177,11 @@ TYPED_TEST(csa_byte_test, isa_access)
 //! Test text access methods
 TYPED_TEST(csa_byte_test, text_access)
 {
-    if (csa_byte_test_base::s_config.file_map.find(conf::KEY_TEXT) != csa_byte_test_base::s_config.file_map.end()) {
+    if (test_case_file_map.find(conf::KEY_TEXT) != test_case_file_map.end()) {
         TypeParam csa;
         ASSERT_TRUE(load_from_file(csa, temp_file));
         int_vector<8> text;
-        ASSERT_TRUE(load_vector_from_file(text, test_file, 1));
-        text.resize(text.size()+1);
-        text[text.size()-1] = 0; // add 0-character to the end
+        load_from_file(text, test_case_file_map[conf::KEY_TEXT]);
         size_type n = text.size();
         ASSERT_EQ(n, csa.size());
         for (size_type j=0; j<n; ++j) {
@@ -226,30 +199,26 @@ TYPED_TEST(csa_byte_test, text_access)
 //! Test Burrows-Wheeler access methods
 TYPED_TEST(csa_byte_test, bwt_access)
 {
-    if (csa_byte_test_base::s_config.file_map.find(conf::KEY_BWT) != csa_byte_test_base::s_config.file_map.end()) {
+    if (test_case_file_map.find(conf::KEY_BWT) != test_case_file_map.end()) {
         TypeParam csa;
         ASSERT_TRUE(load_from_file(csa, temp_file));
         int_vector<8> bwt;
-        load_from_file(bwt, csa_byte_test_base::s_config.file_map[conf::KEY_BWT]);
-        size_type n = 1 + util::file_size(test_file);
+        load_from_file(bwt, test_case_file_map[conf::KEY_BWT]);
+        size_type n = bwt.size();
         ASSERT_EQ(n, csa.size());
-        // csa_rao may have padding, remove its effect.
-        auto const padding(csa.padding());
         for (size_type j=0; j<n; ++j) {
-            ASSERT_EQ(bwt[j + padding], csa.bwt[j])<<" j="<<j;
+            ASSERT_EQ(bwt[j], csa.bwt[j])<<" j="<<j;
         }
     }
 }
 
 TYPED_TEST(csa_byte_test, f_access)
 {
-    if (csa_byte_test_base::s_config.file_map.find(conf::KEY_TEXT) != csa_byte_test_base::s_config.file_map.end()) {
+    if (test_case_file_map.find(conf::KEY_TEXT) != test_case_file_map.end()) {
         TypeParam csa;
         ASSERT_TRUE(load_from_file(csa, temp_file));
         int_vector<8> text;
-        ASSERT_TRUE(load_vector_from_file(text, test_file, 1));
-        text.resize(text.size()+1);
-        text[text.size()-1] = 0; // add 0-character to the end
+        load_from_file(text, test_case_file_map[conf::KEY_TEXT]);
         std::sort(begin(text),end(text));
         size_type n = text.size();
         ASSERT_EQ(n, csa.size());
@@ -263,11 +232,11 @@ TYPED_TEST(csa_byte_test, f_access)
 //! Test Psi access methods
 TYPED_TEST(csa_byte_test, psi_access)
 {
-    if (csa_byte_test_base::s_config.file_map.find(conf::KEY_PSI) != csa_byte_test_base::s_config.file_map.end()) {
+    if (test_case_file_map.find(conf::KEY_PSI) != test_case_file_map.end()) {
         TypeParam csa;
         ASSERT_TRUE(load_from_file(csa, temp_file));
         int_vector<> psi;
-        load_from_file(psi, csa_byte_test_base::s_config.file_map[conf::KEY_PSI]);
+        load_from_file(psi, test_case_file_map[conf::KEY_PSI]);
         size_type n = psi.size();
         ASSERT_EQ(n, csa.size());
         for (size_type j=0; j<n; ++j) {
@@ -297,13 +266,11 @@ TYPED_TEST(csa_byte_test, swap)
     TypeParam csa2;
     csa1.swap(csa2);
     int_vector<> sa;
-    load_from_file(sa, csa_byte_test_base::s_config.file_map[conf::KEY_SA]);
-    size_type n = 1 + util::file_size(test_file);
+    load_from_file(sa, test_case_file_map[conf::KEY_SA]);
+    size_type n = sa.size();
     ASSERT_EQ(n, csa2.size());
-    // csa_rao may have padding, remove its effect.
-    auto const padding(csa2.padding());
     for (size_type j=0; j<n; ++j) {
-        ASSERT_EQ((typename TypeParam::value_type)sa[j + padding], csa2[j]);
+        ASSERT_EQ((typename TypeParam::value_type)sa[j], csa2[j]);
     }
 }
 
@@ -311,7 +278,7 @@ TYPED_TEST(csa_byte_test, swap)
 TYPED_TEST(csa_byte_test, delete_)
 {
     sdsl::remove(temp_file);
-    util::delete_all_files(csa_byte_test_base::s_config.file_map);
+    util::delete_all_files(test_case_file_map);
 }
 
 }  // namespace

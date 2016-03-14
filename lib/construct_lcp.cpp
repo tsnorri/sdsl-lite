@@ -11,11 +11,11 @@
 namespace sdsl
 {
 
-void construct_lcp_semi_extern_PHI(cache_config& config, uint64_t const padding)
+void construct_lcp_semi_extern_PHI(cache_config& config)
 {
     typedef int_vector<>::size_type size_type;
     int_vector_buffer<> sa_buf(cache_file_name(conf::KEY_SA, config));
-    size_type n = sa_buf.size() - padding;
+    size_type n = sa_buf.size();
     if (1==n) {
         int_vector<> lcp(1, 0);
         store_to_cache(lcp, conf::KEY_LCP, config);
@@ -30,7 +30,7 @@ void construct_lcp_semi_extern_PHI(cache_config& config, uint64_t const padding)
 
     for (size_type i=0, sai_1=0; i < n; ++i) {   // we can start at i=0. if SA[i]%q==0
         // we set PHI[(SA[i]=n-1)%q]=0, since T[0]!=T[n-1]
-        size_type sai = sa_buf[i + padding];
+        size_type sai = sa_buf[i];
         if ((sai & modq) == 0) {
             if ((sai>>log_q) >= plcp.size()) {
 //                    std::cerr<<"sai="<<sai<<" log_q="<<log_q<<" sai>>log_q="<<(sai>>log_q)<<" "<<sai_1<<std::endl;
@@ -62,7 +62,7 @@ void construct_lcp_semi_extern_PHI(cache_config& config, uint64_t const padding)
     int_vector_buffer<> lcp_out_buf(cache_file_name(conf::KEY_LCP, config), std::ios::out, buffer_size, sa_buf.width());	// open buffer for plcp
 
     for (size_type i=0, sai_1=0,l=0, sai=0,iq=0; i < n; ++i) {
-        /*size_type*/ sai = sa_buf[i + padding];
+        /*size_type*/ sai = sa_buf[i];
 //				std::cerr<<"i="<<i<<" sai="<<sai<<std::endl;
         if ((sai & modq) == 0) { // we have already worked the value out ;)
             lcp_out_buf[i] = l=plcp[sai>>log_q];
@@ -81,7 +81,7 @@ void construct_lcp_semi_extern_PHI(cache_config& config, uint64_t const padding)
         size_type j=0;
         for (j=0; j<l; ++j) {
             if (text[sai+j] !=text[sai_1+j]) {
-                std::cout<<"lcp["<<i+padding<<"]="<<l<<" is two big! "<<j<<" is right!"<<" sai="<<sai<<std::endl;
+                std::cout<<"lcp["<<i<<"]="<<l<<" is two big! "<<j<<" is right!"<<" sai="<<sai<<std::endl;
                 if ((sai&modq)!=0)
                     std::cout<<" plcp[sai>>log_q]="<<plcp[sai>>log_q]<<" sai-iq="<<sai-iq<<" sai="<<sai<<" sai-iq="<<sai-iq<<std::endl;
                 break;

@@ -439,32 +439,14 @@ class sorter
             DBG_OUT<<"x.size()="<<x.size()<<std::endl;
             DBG_OUT<<"sa.width()="<<(int)sa.width()<<std::endl;
             DBG_OUT<<"sa.size()="<<sa.size()<<std::endl;
-            
-            if (x[x.size()-1] > 0) {
-                throw std::logic_error("Last symbol is not 0-symbol. Suffix array can not be constructed.");
-            }
-
-            // Check the amount of padding.
-            size_type size(x.size());
-            size_type padding(0);
-            while (size > 0 && 0 == x[size - 1])
-            {
-                ++padding;
-                --size;
-            }
-            --padding;
-            ++size;
-            
-            if (1 == size) {
-                sa = tIV(1 + padding, 0);
-                for (decltype(padding) i(0); i < padding; ++i)
-                    sa[i] = padding - i;
+            if (x.size() == 1) {
+                sa = tIV(1, 0);
                 return;
             }
 
             int64_t max_symbol = 0, min_symbol = x.width() < 64 ? bits::lo_set[x.width()] : 0x7FFFFFFFFFFFFFFFLL;
 
-            for (size_type i=0; i < size-1; ++i) {
+            for (size_type i=0; i < x.size()-1; ++i) {
                 max_symbol = std::max(max_symbol, (int64_t)x[i]);
                 min_symbol = std::min(min_symbol, (int64_t)x[i]);
             }
@@ -472,11 +454,14 @@ class sorter
             if (0 == min_symbol) {
                 throw std::logic_error("Text contains 0-symbol. Suffix array can not be constructed.");
             }
+            if (x[x.size()-1] > 0) {
+                throw std::logic_error("Last symbol is not 0-symbol. Suffix array can not be constructed.");
+            }
             DBG_OUT<<"sorter: min_symbol="<<min_symbol<<std::endl;
             DBG_OUT<<"sorter: max_symbol="<<max_symbol<<std::endl;
 
-            int64_t n = size-1;
-            DBG_OUT<<"size-1="<<size-1<<" n="<<n<<std::endl;
+            int64_t n = x.size()-1;
+            DBG_OUT<<"x.size()-1="<<x.size()-1<<" n="<<n<<std::endl;
             uint8_t width = std::max(bits::hi(max_symbol)+2, bits::hi(n+1)+2);
             DBG_OUT<<"sorter: width="<<(int)width<<" max_symbol_width="<<bits::hi(max_symbol)+1<<" n_width="<< bits::hi(n) <<std::endl;
             util::expand_width(x, width);
@@ -489,15 +474,7 @@ class sorter
             m_msb = sa.width()-1;
             m_msb_mask = 1ULL<<m_msb;
             DBG_OUT<<"sorter: m_msb="<< (int)m_msb <<" m_msb_mask="<<m_msb_mask<<std::endl;
-            sort(x.begin(), sa.begin(), size-1, max_symbol+1, min_symbol);
-            
-            // Move and add padding to the beginning of the SA.
-            if (padding)
-            {
-                std::move_backward(sa.begin(), sa.begin() + size, sa.end());
-                for (decltype(padding) i(0); i < padding; ++i)
-                    sa[i] = size - 1 + (padding - i);
-            }
+            sort(x.begin(), sa.begin(), x.size()-1, max_symbol+1, min_symbol);
         }
 
 

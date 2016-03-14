@@ -85,7 +85,6 @@ class csa_bitcompressed
         typedef typename alphabet_type::string_type             string_type;
         typedef typename alphabet_type::alphabet_category       alphabet_category;
         typedef csa_bitcompressed                               csa_type;
-        typedef int_vector_buffer<alphabet_type::int_width>     text_buffer_type;
 
         typedef csa_tag                                         index_category;
         typedef psi_tag                                         extract_category;
@@ -280,9 +279,6 @@ class csa_bitcompressed
         {
             return 1;
         }
-
-        static bool can_use_cached_text(cache_config const &) { return true; }
-        static typename text_buffer_type::size_type text_min_pad(typename text_buffer_type::size_type) { return 0; }
 };
 
 } // end namespace sdsl
