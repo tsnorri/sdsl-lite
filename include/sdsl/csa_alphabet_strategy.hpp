@@ -173,8 +173,6 @@ class byte_alphabet
         byte_alphabet& operator=(const byte_alphabet&);
         byte_alphabet& operator=(byte_alphabet&&);
     
-        C_type &get_C() { return m_C; }
-
         void swap(byte_alphabet&);
 
         size_type serialize(std::ostream& out, structure_tree_node* v=nullptr, std::string name="")const;
@@ -569,8 +567,6 @@ class int_alphabet
             return *this;
         }
 
-        C_type &get_C() { return m_C; }
-	
         //! Swap operator
         void swap(int_alphabet& strat)
         {
