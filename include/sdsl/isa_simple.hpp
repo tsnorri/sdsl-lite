@@ -57,15 +57,15 @@ namespace sdsl
 		int_vector<0> &isa() { return m_isa; }
 	
 		// Accessors return values in range [0, n], i.e. 1-based indices.
-		value_type psi_k_from_sa_val(uint64_t k, uint64_t v);
+		value_type psi_k_from_sa_val(uint64_t k, uint64_t v) const;
 			
-		value_type psi_k(uint64_t k, uint64_t i);
+		value_type psi_k(uint64_t k, uint64_t i) const;
 	};
 	
 	
 	// Accessors return values in range [0, n], i.e. 1-based indices.
 	template<class t_sa_buf_type>
-	auto isa_simple<t_sa_buf_type>::psi_k_from_sa_val(uint64_t k, uint64_t v) -> value_type
+	auto isa_simple<t_sa_buf_type>::psi_k_from_sa_val(uint64_t k, uint64_t v) const -> value_type
 	{
 		v += k;
 		if (v < m_sa_buf.size())
@@ -76,7 +76,7 @@ namespace sdsl
 	
 	
 	template<class t_sa_buf_type>
-	auto isa_simple<t_sa_buf_type>::psi_k(uint64_t k, uint64_t i) -> value_type
+	auto isa_simple<t_sa_buf_type>::psi_k(uint64_t k, uint64_t i) const -> value_type
 	{
 		auto v(m_sa_buf[i]);
 		return psi_k_from_sa_val(k, v);
