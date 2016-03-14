@@ -41,7 +41,6 @@ namespace sdsl
 	{
 	public:
 		typedef csa_rao_builder<t_csa_rao> builder_type;
-		typedef typename t_csa_rao::spec_type::delegate_type delegate_type;
 		typedef psi_k_support<
 			typename t_csa_rao::spec_type::bit_vector,
 			typename t_csa_rao::spec_type::r_bit_vector,
@@ -49,8 +48,6 @@ namespace sdsl
 		> psi_k_support_type;
 		
 	protected:
-		friend typename t_csa_rao::spec_type::delegate_type;
-		
 		template <class t_builder, class t_sa_buf>
 		class psi_k_support_builder_delegate
 		{
@@ -76,8 +73,6 @@ namespace sdsl
 		};
 	
 	protected:
-		delegate_type m_delegate;
-		
 		// Builder lifetime is shorter than any of the two below.
 		t_csa_rao &m_csa;
 		cache_config &m_config;
@@ -91,7 +86,6 @@ namespace sdsl
 			m_csa(csa),
 			m_config(config)
 		{
-			m_delegate.setup(m_csa, *this);
 		}
 		
 		csa_rao_builder(builder_type const &other) = delete;
@@ -339,7 +333,6 @@ namespace sdsl
 	template<class t_sa_buf_type>
 	void csa_rao_builder<t_csa_rao>::compress_level(uint8_t const ll, t_sa_buf_type &sa_buf)
 	{
-		m_delegate.start_level(*this, ll, sa_buf);
 		assert(0 < m_csa.m_partition_count);
 		
 		typename t_csa_rao::template array<typename t_csa_rao::psi_k_support_type> partitions;
@@ -389,9 +382,6 @@ namespace sdsl
 			{
 				psi_k_support_type psi_k_support;
 				builder.build(psi_k_support, k, delegate);
-			
-				// Debugging helper.
-				m_delegate.finish_create_psi_k(*this, ll, k, d_values.size(), psi_k_fn);
 			
 				assert(partitions.size() == k - 1);
 				partitions.emplace_back(std::move(psi_k_support));

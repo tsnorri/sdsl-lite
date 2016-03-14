@@ -27,7 +27,6 @@
 #include <cmath>
 
 #include <sdsl/csa_alphabet_strategy.hpp>
-#include <sdsl/csa_rao_delegate.hpp>
 #include <sdsl/elias_inventory.hpp>
 #include <sdsl/iterators.hpp>
 #include <sdsl/psi_k_support.hpp>
@@ -49,7 +48,6 @@ namespace sdsl
 	 *  \tparam t_s_bit_vector		Type of bit vectors for which select support is needed.
 	 *  \tparam t_rs_bit_vector		Type of bit vectors for which rank and select support are needed.
 	 *  \tparam t_isa				Class that implements the inverse suffix array.
-	 *  \tparam t_delegate			Helper class for debugging purposes.
 	 */
 	// TODO: verify time and space complexity.
 	template<uint32_t t_levels									= 0,
@@ -59,8 +57,7 @@ namespace sdsl
 			 class t_r_bit_vector								= bit_vector,
 			 class t_s_bit_vector								= bit_vector,
 			 class t_rs_bit_vector								= bit_vector,
-			 template<class, class, class, class> class t_isa	= isa_lsw,
-			 class t_delegate									= csa_rao_delegate
+			 template<class, class, class, class> class t_isa	= isa_lsw
 			>
 	class csa_rao_spec
 	{
@@ -70,7 +67,6 @@ namespace sdsl
 		typedef t_r_bit_vector		r_bit_vector;
 		typedef t_s_bit_vector		s_bit_vector;
 		typedef t_rs_bit_vector		rs_bit_vector;
-		typedef t_delegate			delegate_type;
 		
 		template<class t_csa> using isa_type = t_isa<t_csa, bit_vector, r_bit_vector, s_bit_vector>;
 		
@@ -144,7 +140,6 @@ namespace sdsl
 		};
 	
 		friend class csa_rao_builder<csa_type>;
-		friend typename spec_type::delegate_type;
 		friend isa_type;
 		friend class bwt_of_csa_psi<csa_type>;
 		friend class traverse_csa_saisa<csa_type, true>;
