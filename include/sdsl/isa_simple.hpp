@@ -29,7 +29,7 @@ namespace sdsl
 	public:
 		typedef uint64_t value_type;
 	protected:
-		t_sa_buf_type &m_sa_buf; // Check that psi_k object lifetime does not exceed that of sa_buf.
+		t_sa_buf_type &m_sa_buf; // Check that isa_simple object lifetime does not exceed that of m_sa_buf.
 		int_vector<0> m_isa;
 	
 	public:
