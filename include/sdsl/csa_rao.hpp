@@ -182,9 +182,9 @@ namespace sdsl
 	public:
 		csa_rao():
 			m_levels(),
+			m_isa(*this),
 			m_level_count(spec_type::s_levels),
-			m_partition_count(spec_type::s_partitions),
-			m_isa(*this)
+			m_partition_count(spec_type::s_partitions)
 		{
 		}
 	
