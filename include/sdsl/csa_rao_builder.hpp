@@ -250,8 +250,9 @@ namespace sdsl
 		
 		if (0 == m_csa.m_partition_count)
 		{
-			auto const start(std::ceil(std::pow(std::log2(n), 1.0 / (1 + m_csa.m_level_count))));
-			m_csa.m_partition_count = util::find_divisor(n, (start < 1 ? 1 : start));
+			// Section 3.2, choose l = (log₂n)^(1/(t + 1)).
+			auto const pc(std::ceil(std::pow(std::log2(n), 1.0 / (1 + m_csa.m_level_count))));
+			m_csa.m_partition_count = pc < 1 ? 1 : pc;
 			assert(m_csa.m_partition_count);
 		}
 
