@@ -50,8 +50,8 @@ namespace sdsl
 	 *  \tparam t_isa				Class that implements the inverse suffix array.
 	 */
 	// TODO: verify time and space complexity.
-	template<uint32_t t_levels									= 0,
-			 uint32_t t_partitions								= 0,
+	template<uint32_t t_t										= 0,
+			 uint32_t t_l										= 0,
 			 class t_alphabet_strat								= byte_alphabet,
 			 class t_bit_vector									= bit_vector,
 			 class t_r_bit_vector								= bit_vector,
@@ -70,8 +70,8 @@ namespace sdsl
 		
 		template<class t_csa> using isa_type = t_isa<t_csa, bit_vector, r_bit_vector, s_bit_vector>;
 		
-		static uint32_t const s_levels{t_levels};
-		static uint32_t const s_partitions{t_partitions};
+		static uint32_t const s_t{t_t};
+		static uint32_t const s_l{t_l};
 	};
 	
 	
@@ -120,11 +120,13 @@ namespace sdsl
 		typedef typename alphabet_type::string_type											string_type;
 		
 		typedef csa_rao_builder<csa_type>													builder_type;
-		typedef typename std::remove_const<decltype(t_spec::s_levels)>::type				level_count_type;
-		typedef typename std::remove_const<decltype(t_spec::s_partitions)>::type			partition_count_type;
+		typedef typename std::remove_const<decltype(t_spec::s_t)>::type						level_count_type;
+		typedef typename std::remove_const<decltype(t_spec::s_l)>::type						partition_count_type;
 		typedef psi_k_support<
-			typename t_spec::bit_vector, typename t_spec::r_bit_vector, typename t_spec::s_bit_vector
-		> psi_k_support_type;
+			typename t_spec::bit_vector,
+			typename t_spec::r_bit_vector,
+			typename t_spec::s_bit_vector
+		>																					psi_k_support_type;
 		typedef t_spec																		spec_type;
 
 		typedef csa_tag																		index_category;
@@ -154,8 +156,8 @@ namespace sdsl
 		array<level> m_levels;
 		alphabet_type m_alphabet;
 		isa_type m_isa;
-		level_count_type m_level_count{0};			// FIXME: only needed in serialization?
-		partition_count_type m_partition_count{0};	// FIXME: only needed in serialization?
+		level_count_type m_t{0};			// FIXME: only needed in serialization?
+		partition_count_type m_l{0};	// FIXME: only needed in serialization?
 		size_type m_padding{0};
 	
 	protected:
@@ -183,8 +185,8 @@ namespace sdsl
 		csa_rao():
 			m_levels(),
 			m_isa(*this),
-			m_level_count(spec_type::s_levels),
-			m_partition_count(spec_type::s_partitions)
+			m_t(spec_type::s_t),
+			m_l(spec_type::s_l)
 		{
 		}
 	
@@ -231,8 +233,8 @@ namespace sdsl
 		void swap(csa_type &other) { using std::swap; swap(other, *this); }
 		void swap(csa_type &&other) { swap(other); }
 		
-		partition_count_type partition_count() const { return m_partition_count; }
-		level_count_type level_count() const { return m_level_count; }
+		partition_count_type partition_count() const { return m_l; }
+		level_count_type level_count() const { return m_t; }
 		uint64_t decompress_sa(uint8_t ll, uint64_t val) const;
 	};
 	
@@ -400,8 +402,8 @@ namespace sdsl
 		m_levels = other.m_levels;
 		m_alphabet = other.m_alphabet;
 		m_isa = other.m_isa;
-		m_level_count = other.m_level_count;
-		m_partition_count = other.m_partition_count;
+		m_t = other.m_t;
+		m_l = other.m_l;
 		m_padding = other.m_padding;
 	}
 	
@@ -413,8 +415,8 @@ namespace sdsl
 		m_levels = std::move(other.m_levels);
 		m_alphabet = std::move(other.m_alphabet);
 		m_isa = std::move(other.m_isa);
-		m_level_count = std::move(other.m_level_count);
-		m_partition_count = std::move(other.m_partition_count);
+		m_t = std::move(other.m_t);
+		m_l = std::move(other.m_l);
 		m_padding = std::move(other.m_padding);
 	}
 	
@@ -445,31 +447,31 @@ namespace sdsl
 	template<class t_spec>
 	auto csa_rao<t_spec>::sa(size_type i, level_count_type lidx) const -> value_type
 	{
-		assert(lidx <= m_level_count);
-		if (lidx == m_level_count)
+		assert(lidx <= m_t);
+		if (lidx == m_t)
 			return m_sa[i];
 		
 		level const &level(m_levels[lidx]);
 		
 		// Check if i is stored in SA_{i+1}. If not, use Ψ_k.
 		auto const k(level.d_values()[i]);
-		if (k == m_partition_count)
+		if (k == m_l)
 		{
 			auto const r(level.b_rank_1(1 + i));
 			assert(r);
 			auto const val(sa(r - 1, 1 + lidx));
-			return m_partition_count * (1 + val) - 1;
+			return m_l * (1 + val) - 1;
 		}
 		
 		auto const psi_k_i(psi_k(lidx, k, i));
 		
 		// The value for psi_k_i should be stored in SA_{i+1}.
 		assert(psi_k_i);
-		assert(level.d_values()[psi_k_i - 1] == m_partition_count);
+		assert(level.d_values()[psi_k_i - 1] == m_l);
 		
 		auto const r(level.b_rank_1(psi_k_i)); // rank in [0, i-1], psi_k_i 1-based.
 		assert(r);
-		auto const retval(m_partition_count * (1 + sa(r - 1, 1 + lidx)) - k - 1);
+		auto const retval(m_l * (1 + sa(r - 1, 1 + lidx)) - k - 1);
 		return retval;
 	}
 
@@ -484,8 +486,8 @@ namespace sdsl
 	template<class t_spec>
 	uint64_t csa_rao<t_spec>::psi_k(level_count_type lidx, uint64_t k, uint64_t i) const
 	{
-		assert(lidx < m_level_count);
-		assert(k < m_partition_count);
+		assert(lidx < m_t);
+		assert(k < m_l);
 		
 		if (0 == k)
 			return i;
@@ -506,15 +508,15 @@ namespace sdsl
 		
 		written_bytes += m_sa.serialize(out, child, "m_sa");
 		written_bytes += m_alphabet.serialize(out, child, "m_alphabet");
-		written_bytes += write_member(m_level_count, out, child, "m_level_count");
-		written_bytes += write_member(m_partition_count, out, child, "m_partition_count");
+		written_bytes += write_member(m_t, out, child, "m_t");
+		written_bytes += write_member(m_l, out, child, "m_l");
 		written_bytes += write_member(m_padding, out, child, "m_padding");
 		
 		level_count_type i(1);
-		assert(m_levels.size() == m_level_count);
+		assert(m_levels.size() == m_t);
 		for (auto const &level : m_levels)
 		{
-			assert(level.partition_count() == m_partition_count - 1);
+			assert(level.partition_count() == m_l - 1);
 			written_bytes += level.serialize(out, child, "level_" + std::to_string(i));
 			++i;
 		}
@@ -531,13 +533,13 @@ namespace sdsl
 	{
 		m_sa.load(in);
 		m_alphabet.load(in);
-		read_member(m_level_count, in);
-		read_member(m_partition_count, in);
+		read_member(m_t, in);
+		read_member(m_l, in);
 		read_member(m_padding, in);
 		
-		m_levels.resize(m_level_count);
-		for (decltype(m_level_count) i(0); i < m_level_count; ++i)
-			m_levels[i].load(in, m_partition_count);
+		m_levels.resize(m_t);
+		for (decltype(m_t) i(0); i < m_t; ++i)
+			m_levels[i].load(in, m_l);
 
 		m_isa.load(in);
 	}
@@ -546,7 +548,7 @@ namespace sdsl
 	template<class t_spec>
 	uint64_t csa_rao<t_spec>::decompress_sa(uint8_t ll, uint64_t val) const
 	{
-		uint64_t const partitions(m_partition_count);
+		uint64_t const partitions(m_l);
 		uint64_t const a(util::ipow(partitions, ll));
 		uint64_t const retval(a + a * val - 1);
 		return retval;

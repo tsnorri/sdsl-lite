@@ -243,21 +243,21 @@ namespace sdsl
 	void csa_rao_builder<t_csa_rao>::check_parameters(std::size_t const n)
 	{
 		// Initialize the remaining instance variables;
-		// set suitable values for t (m_level_count) and l (m_partition_count).
+		// set suitable values for t (m_t) and l (m_l).
 		
-		if (0 == m_csa.m_level_count)
-			m_csa.m_level_count = 1;
+		if (0 == m_csa.m_t)
+			m_csa.m_t = 1;
 		
-		if (0 == m_csa.m_partition_count)
+		if (0 == m_csa.m_l)
 		{
 			// Section 3.2, choose l = (log₂n)^(1/(t + 1)).
-			auto const pc(std::ceil(std::pow(std::log2(n), 1.0 / (1 + m_csa.m_level_count))));
-			m_csa.m_partition_count = pc < 1 ? 1 : pc;
-			assert(m_csa.m_partition_count);
+			auto const l(std::ceil(std::pow(std::log2(n), 1.0 / (1 + m_csa.m_t))));
+			m_csa.m_l = l < 1 ? 1 : l;
+			assert(m_csa.m_l);
 		}
 
-		uint64_t const partitions(m_csa.m_partition_count);
-		uint64_t const l_t(util::ipow(partitions, m_csa.m_level_count));
+		uint64_t const partitions(m_csa.m_l);
+		uint64_t const l_t(util::ipow(partitions, m_csa.m_t));
 		
 		// Calculate padding.
 		if (n <= l_t)
@@ -277,7 +277,7 @@ namespace sdsl
 		m_d_size = std::max(static_cast<uint8_t>(8), static_cast<uint8_t>(util::upper_power_of_2(d_item_bits)));
 	
 		typename t_csa_rao::template array<typename t_csa_rao::level> levels;
-		levels.reserve(m_csa.m_level_count);
+		levels.reserve(m_csa.m_t);
 		m_csa.m_levels = std::move(levels);
 	}
 	
@@ -287,7 +287,7 @@ namespace sdsl
 	{
 		compress_level(0, m_sa_buf);
 		// Both buffers may still be needed for isa_lsw construction.
-		for (uint8_t ll(1); ll < m_csa.m_level_count; ++ll)
+		for (uint8_t ll(1); ll < m_csa.m_t; ++ll)
 			compress_level(ll, m_csa.m_sa);
 	}
 	
@@ -299,8 +299,8 @@ namespace sdsl
 		t_builder &builder, uint32_t partition
 	)
 	{
-		// Count (n / m_partition_count) from the beginning of p. 310; same as the number of items in the Ψ_k subsequences.
-		return (builder.sa_buf().size() / builder.csa().m_partition_count);
+		// Count (n / m_l) from the beginning of p. 310; same as the number of items in the Ψ_k subsequences.
+		return (builder.sa_buf().size() / builder.csa().m_l);
 	}
 	
 	
@@ -318,8 +318,8 @@ namespace sdsl
 		assert(psi_k); // psi_k shouldn't be zero here.
 
 		// Calculate j for L^k_j in Lemma 3, i.e. the value in base-σ of the
-		// k * m_partition_count^current_level symbols that appear before SA[Ψ_k(i)].
-		uint64_t const partitions(builder.csa().m_partition_count);
+		// k * m_l^current_level symbols that appear before SA[Ψ_k(i)].
+		uint64_t const partitions(builder.csa().m_l);
 		auto const pos(builder.sa_buf()[psi_k - 1]); // psi_k_fn returns 1-based indices.
 		auto decompressed_pos(builder.csa().decompress_sa(m_ll, pos));
 		auto const nc(partition * util::ipow(partitions, m_ll));
@@ -334,10 +334,10 @@ namespace sdsl
 	template<class t_sa_buf_type>
 	void csa_rao_builder<t_csa_rao>::compress_level(uint8_t const ll, t_sa_buf_type &sa_buf)
 	{
-		assert(0 < m_csa.m_partition_count);
+		assert(0 < m_csa.m_l);
 		
 		typename t_csa_rao::template array<typename t_csa_rao::psi_k_support_type> partitions;
-		partitions.reserve(m_csa.m_partition_count);
+		partitions.reserve(m_csa.m_l);
 	
 		// Specialization of isa_simple for the current level.
 		isa_simple<t_sa_buf_type> isa(m_config, sa_buf);
@@ -348,7 +348,7 @@ namespace sdsl
 		bit_vector b_values(n, 0);
 		int_vector<0> d_values(n, 0, m_d_size);	// l − (SA[i] mod l), indices 0-based, SA[i] 1-based (3 (3)).
 		
-		// (3 (1)) Store values from SA divisible by m_partition_count.
+		// (3 (1)) Store values from SA divisible by m_l.
 		// (3 (2)) Create the B vector.
 		// (3 (3)) Create the d array.
 		{
@@ -357,16 +357,16 @@ namespace sdsl
 			{
 				// Change to 1-based.
 				auto const val(*it + 1);
-				if (0 == (val % m_csa.m_partition_count))
+				if (0 == (val % m_csa.m_l))
 				{
-					auto div(val / m_csa.m_partition_count);
+					auto div(val / m_csa.m_l);
 					assert(div);
 					assert(div - 1 <= std::numeric_limits<typename decltype(sa_ll)::value_type>::max());
 					sa_ll.push_back(div - 1);
 					b_values[j] = 1;
 				}
 			
-				auto const d_val(m_csa.m_partition_count - (val % m_csa.m_partition_count));
+				auto const d_val(m_csa.m_l - (val % m_csa.m_l));
 				assert(d_val <= d_values.max_value());
 				d_values[j] = d_val;
 				++j;
@@ -379,7 +379,7 @@ namespace sdsl
 			auto builder(construct_psi_k_support_builder(m_csa, m_text_buf, sa_buf, m_csa.m_alphabet, isa));
 			psi_k_support_builder_delegate<decltype(builder), decltype(sa_buf)> delegate(d_values, ll);
 		
-			for (uint64_t k(1); k < m_csa.m_partition_count; ++k)
+			for (uint64_t k(1); k < m_csa.m_l; ++k)
 			{
 				psi_k_support_type psi_k_support;
 				builder.build(psi_k_support, k, delegate);
@@ -389,7 +389,7 @@ namespace sdsl
 			}
 		}
 		
-		assert(partitions.size() == m_csa.m_partition_count - 1);
+		assert(partitions.size() == m_csa.m_l - 1);
 		typename t_csa_rao::level level(partitions, b_values, d_values);
 	
 		m_csa.m_sa.resize(sa_ll.size()); // Shrinks.

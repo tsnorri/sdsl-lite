@@ -202,7 +202,7 @@ namespace sdsl
 		int_vector<> sa_buf(builder.sa_buf());
 		int_vector<t_csa::alphabet_type::int_width> text_buf(builder.text_buf());
 		
-		uint64_t const l(m_csa.m_partition_count);
+		uint64_t const l(m_csa.m_l);
 		
 		{
 			uint64_t const n(sa_buf.size());
@@ -270,7 +270,7 @@ namespace sdsl
 	template<class t_csa, class t_bit_vector, class t_r_bit_vector, class t_s_bit_vector>
 	auto isa_lsw<t_csa, t_bit_vector, t_r_bit_vector, t_s_bit_vector>::operator[](size_type i) const -> value_type
 	{
-		uint64_t const l(m_csa.m_partition_count);
+		uint64_t const l(m_csa.m_l);
 		size_type const y(i / l);
 		size_type const yl(y * l);
 		size_type const k(i - yl);
