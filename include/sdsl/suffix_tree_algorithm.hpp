@@ -181,7 +181,7 @@ typename t_cst::size_type extract(
     // first get the suffix array entry of the leftmost leaf in the subtree rooted at v
     typename t_cst::size_type begin = cst.csa[cst.lb(v)];
     // then call the extract method on the compressed suffix array
-    extract(cst.csa, begin, begin + cst.depth(v) - 1, text);
+    return extract(cst.csa, begin, begin + cst.depth(v) - 1, text);
 }
 
 //! Calculate the concatenation of edge labels from the root to the node v of of c CST.
