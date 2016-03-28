@@ -363,7 +363,7 @@ class cst_sada
          * \par Time complexity
          *   \f$ \Order{1} \f$
          */
-        node_type root() const
+        constexpr node_type root() const
         {
             return 0;
         }

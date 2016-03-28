@@ -316,7 +316,7 @@ class cst_fully
         }
 
 //! Returns the root of the sampled tree.
-        sampled_node_type sampled_root() const
+        constexpr sampled_node_type sampled_root() const
         {
             return 0;
         }
