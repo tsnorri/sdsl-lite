@@ -480,7 +480,7 @@ class int_vector
 
 	
         //! Maximum value that can be stored by the vector.
-        uint64_t max_value()
+        uint64_t max_value() const
         {
 			return max_value(0 == t_width ? m_width : t_width);
         }
@@ -746,6 +746,13 @@ class int_vector_reference
             return value_type(*this) < value_type(x);
         }
 };
+
+template<class t_int_vector>
+inline std::ostream &operator<<(std::ostream &out, int_vector_reference<t_int_vector> const &ref)
+{
+	out << typename int_vector_reference<t_int_vector>::value_type(ref);
+	return out;
+}
 
 // For C++11
 template<class t_int_vector>
