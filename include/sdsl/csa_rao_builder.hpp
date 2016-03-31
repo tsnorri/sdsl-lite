@@ -256,8 +256,8 @@ namespace sdsl
 			assert(m_csa.m_l);
 		}
 
-		uint64_t const partitions(m_csa.m_l);
-		uint64_t const l_t(util::ipow(partitions, m_csa.m_t));
+		uint64_t const l(m_csa.m_l);
+		uint64_t const l_t(util::ipow(l, m_csa.m_t));
 		
 		// Calculate padding.
 		if (n <= l_t)
@@ -271,10 +271,9 @@ namespace sdsl
 				m_csa.m_padding = 0;
 		}
 		
-		// Each item in d is l - (SA[i] mod l) ≤ l (3).
-		uint64_t const d_item_bits(util::log2_ceil(partitions));
-		// Round up to 8, 16, 32, 64.
-		m_d_size = std::max(static_cast<uint8_t>(8), static_cast<uint8_t>(util::upper_power_of_2(d_item_bits)));
+		// Each item in d is 1 ≤ l - (SA[i] mod l) ≤ l (3).
+		// If the values in d are offset by one, log_2(l) bits suffice.
+		m_d_size = util::log2_ceil(l);
 	
 		typename t_csa_rao::template array<typename t_csa_rao::level> levels;
 		levels.reserve(m_csa.m_t);
@@ -311,7 +310,7 @@ namespace sdsl
 	)
 	{
 		// Only consider the values that belong to the subsequences {Ψ_k(i) | d[i] = k} (3 (4), p. 310).
-		if (m_d_values[i] != partition)
+		if (1 + m_d_values[i] != partition)
 			return false;
 
 		psi_k = builder.isa().psi_k(partition, i);
@@ -319,10 +318,10 @@ namespace sdsl
 
 		// Calculate j for L^k_j in Lemma 3, i.e. the value in base-σ of the
 		// k * m_l^current_level symbols that appear before SA[Ψ_k(i)].
-		uint64_t const partitions(builder.csa().m_l);
+		uint64_t const l(builder.csa().m_l);
 		auto const pos(builder.sa_buf()[psi_k - 1]); // psi_k_fn returns 1-based indices.
 		auto decompressed_pos(builder.csa().decompress_sa(m_ll, pos));
-		auto const nc(partition * util::ipow(partitions, m_ll));
+		auto const nc(partition * util::ipow(l, m_ll));
 		// decompressed_pos won't be included.
 		j = typename t_builder::text_range(builder.text_buf(), decompressed_pos, nc);
 		
@@ -367,8 +366,9 @@ namespace sdsl
 				}
 			
 				auto const d_val(m_csa.m_l - (val % m_csa.m_l));
-				assert(d_val <= d_values.max_value());
-				d_values[j] = d_val;
+				assert(d_val);
+				assert(d_val - 1 <= d_values.max_value());
+				d_values[j] = d_val - 1;
 				++j;
 			}
 		}

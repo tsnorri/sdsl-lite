@@ -41,6 +41,7 @@ namespace sdsl
 	protected:
 		int_vector<0> m_isa;
 		std::vector<psi_k_support_type> m_psi_k_support;
+		uint64_t m_l{0};
 		
 	public:
 		isa_lsw_base() = default;
@@ -162,7 +163,9 @@ namespace sdsl
 		t_builder &builder, uint32_t partition
 	) -> int_vector<0>::size_type
 	{
-		return builder.sa_buf().size() / m_l;
+		uint64_t const n(builder.sa_buf().size());
+		auto const isa_size(1 + uint64_t(std::floor(double(n) / m_l)));
+		return isa_size;
 	}
 	
 
@@ -201,18 +204,35 @@ namespace sdsl
 		// Access the text and the suffix array. m_csa could be used instead.
 		int_vector<> sa_buf(builder.sa_buf());
 		int_vector<t_csa::alphabet_type::int_width> text_buf(builder.text_buf());
-		
-		uint64_t const l(m_csa.m_l);
+		uint64_t const n(sa_buf.size());
 		
 		{
-			uint64_t const n(sa_buf.size());
-			assert(0 == n % l);
-			decltype(this->m_isa) isa_tmp(n / l, 0);
+			auto const log_n(util::log2_ceil(n));
+			uint64_t const l(std::floor(std::sqrt(log_n)));
+			this->m_l = std::max(uint64_t(1), l);
+		}
+
+		{
+			// Find the maximum value to be stored. (Or just take log_2(n).)
+			uint64_t max_val(0);
 			for (uint64_t i(0); i < n; ++i)
 			{
-				auto val(sa_buf[i]);
-				if (0 == val % l)
-					isa_tmp[val / l] = i;
+				auto const val(sa_buf[i]);
+				if (0 == val % this->m_l)
+					max_val = std::max(max_val, i);
+			}
+			
+			auto const isa_size(1 + uint64_t(std::floor(double(n) / this->m_l)));
+			decltype(this->m_isa) isa_tmp(isa_size, 0, util::log2_ceil(1 + max_val));
+			
+			for (uint64_t i(0); i < n; ++i)
+			{
+				auto const val(sa_buf[i]);
+				if (0 == val % this->m_l)
+				{
+					assert(i <= isa_tmp.max_value());
+					isa_tmp[val / this->m_l] = i;
+				}
 			}
 			
 			this->m_isa = std::move(isa_tmp);
@@ -222,11 +242,11 @@ namespace sdsl
 			// Lemma 2.
 			isa_simple<decltype(sa_buf)> isa(config, sa_buf);
 			
-			this->m_psi_k_support.reserve(l - 1);
+			this->m_psi_k_support.reserve(this->m_l - 1);
 			auto builder(construct_psi_k_support_builder(m_csa, text_buf, sa_buf, m_csa.m_alphabet, isa));
 			
-			psi_k_support_builder_delegate<decltype(builder), decltype(sa_buf)> delegate(l);
-			for (uint64_t k(1); k < l; ++k)
+			psi_k_support_builder_delegate<decltype(builder), decltype(sa_buf)> delegate(this->m_l);
+			for (uint64_t k(1); k < this->m_l; ++k)
 			{
 				psi_k_support_type psi_k_support;
 				builder.build(psi_k_support, k, delegate);
@@ -270,9 +290,8 @@ namespace sdsl
 	template<class t_csa, class t_bit_vector, class t_r_bit_vector, class t_s_bit_vector>
 	auto isa_lsw<t_csa, t_bit_vector, t_r_bit_vector, t_s_bit_vector>::operator[](size_type i) const -> value_type
 	{
-		uint64_t const l(m_csa.m_l);
-		size_type const y(i / l);
-		size_type const yl(y * l);
+		size_type const y(i / this->m_l);
+		size_type const yl(y * this->m_l);
 		size_type const k(i - yl);
 		value_type const z(this->m_isa[y]);
 		value_type const psi_val(psi_k(k, z));
@@ -289,6 +308,7 @@ namespace sdsl
 		auto psi_k_count(this->m_psi_k_support.size());
 
 		written_bytes += this->m_isa.serialize(out, child, "m_isa");
+		written_bytes += write_member(this->m_l, out, child, "m_l");
 		written_bytes += write_member(psi_k_count, out, child, "psi_k_count");
 		
 		typename decltype(this->m_psi_k_support)::size_type i(1);
@@ -307,6 +327,8 @@ namespace sdsl
 	void isa_lsw<t_csa, t_bit_vector, t_r_bit_vector, t_s_bit_vector>::load(std::istream& in)
 	{
 		this->m_isa.load(in);
+		
+		read_member(this->m_l, in);
 		
 		typename decltype(this->m_psi_k_support)::size_type psi_k_count(0);
 		read_member(psi_k_count, in);

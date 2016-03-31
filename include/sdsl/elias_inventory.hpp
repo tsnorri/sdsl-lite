@@ -139,6 +139,7 @@ namespace sdsl {
 	}
 	
 	
+	// ck is the cumulative sum of the vector sizes.
 	// vec 0-based, ck 1-based.
 	template<class t_s_bit_vector>
 	template<class t_vec, class t_ck>
@@ -183,11 +184,11 @@ namespace sdsl {
 		// Rao's lemma 1.
 		// Calculate the minimum number of bits.
 		size_type const bits(util::log2_ceil(max_sum));
-		// Grossi and Vitter use floor (lemma 2), Rao uses ceil (lemma 1).
+		// Grossi and Vitter use floor (Lemma 2), Rao uses ceil (Lemma 1).
 		size_type const high_bits(util::log2_floor(total_count));
 		decltype(this->m_low_bits) low_bits = bits - high_bits;
-		bit_vector high_values(2 * total_count, 0); // Size from lemma 1.
-		int_vector<0> low_values(total_count, 0, util::upper_power_of_2(low_bits));
+		bit_vector high_values(2 * total_count, 0); // Size from Rao's Lemma 1.
+		int_vector<0> low_values(total_count, 0, low_bits);
 		size_type ptr(0);
 		value_type prev_val(0);
 		

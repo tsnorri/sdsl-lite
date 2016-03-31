@@ -454,7 +454,7 @@ namespace sdsl
 		level const &level(m_levels[lidx]);
 		
 		// Check if i is stored in SA_{i+1}. If not, use Ψ_k.
-		auto const k(level.d_values()[i]);
+		auto const k(1 + level.d_values()[i]);
 		if (k == m_l)
 		{
 			auto const r(level.b_rank_1(1 + i));
@@ -467,7 +467,7 @@ namespace sdsl
 		
 		// The value for psi_k_i should be stored in SA_{i+1}.
 		assert(psi_k_i);
-		assert(level.d_values()[psi_k_i - 1] == m_l);
+		assert(1 + level.d_values()[psi_k_i - 1] == m_l);
 		
 		auto const r(level.b_rank_1(psi_k_i)); // rank in [0, i-1], psi_k_i 1-based.
 		assert(r);
