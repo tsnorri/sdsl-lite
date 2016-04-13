@@ -692,7 +692,8 @@ T util::upper_power_of_2(T const val)
             return 1;
 
         default:
-            T const retval(1 << (1 + bits::hi(val - 1)));
+            T retval(1);
+            retval <<= (1 + bits::hi(val - 1));
             assert(val <= retval);
             return retval;
     }
