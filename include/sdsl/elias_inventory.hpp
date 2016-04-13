@@ -101,6 +101,9 @@ namespace sdsl {
 		
 		elias_inventory &operator=(elias_inventory const &other) &;
 		elias_inventory &operator=(elias_inventory &&other) &;
+		size_type size() const { return this->m_values_low.size(); }
+		int_vector<0> &values_low() const { return this->m_values_low; }
+		uint64_t raw_value(size_type i) const SDSL_HOT;
 		value_type operator[](size_type i) const SDSL_HOT;
 		
 		auto serialize(std::ostream& out, structure_tree_node *v = nullptr, std::string name = "") const -> size_type;
@@ -126,16 +129,23 @@ namespace sdsl {
 		m_values_high_s1_support.set_vector(&this->m_values_high);
 		return *this;
 	}
-	
-	
+
+
 	template<class t_s_bit_vector>
-	auto elias_inventory<t_s_bit_vector>::operator[](size_type i) const -> value_type
+	uint64_t elias_inventory<t_s_bit_vector>::raw_value(size_type i) const
 	{
 		value_type low_val(this->m_values_low[i]);
 		value_type high_val(m_values_high_s1_support.select(1 + i) - i);
 		high_val <<= this->m_low_bits;
 		high_val |= low_val;
-		return high_val & this->m_mask;
+		return high_val;
+	}
+	
+	
+	template<class t_s_bit_vector>
+	auto elias_inventory<t_s_bit_vector>::operator[](size_type i) const -> value_type
+	{
+		return raw_value(i) & this->m_mask;
 	}
 	
 	
@@ -155,7 +165,7 @@ namespace sdsl {
 			for (size_type j(0), set_count(vec.size()); j < set_count; ++j)
 			{
 				for (size_type i(0), count(vec[j].size()); i < count; ++i)
-					max_tmp = std::max(vec[j][i], max_tmp);
+					max_tmp = std::max<decltype(max_tmp)>(vec[j][i], max_tmp);
 			}
 			++max_tmp;
 			max = util::upper_power_of_2(max_tmp);
