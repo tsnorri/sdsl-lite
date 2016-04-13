@@ -121,6 +121,7 @@ namespace sdsl
 		
 		psi_k_support &operator=(psi_k_support const &other) &;
 		psi_k_support &operator=(psi_k_support &&other) &;
+		elias_inventory<s_bit_vector> const &psi_k_values() const { return this->m_psi_k_values; }
 		uint64_t operator[](size_type i) const SDSL_HOT;
 		auto serialize(std::ostream& out, structure_tree_node *v = nullptr, std::string name = "") const -> size_type;
 		void load(std::istream& in);

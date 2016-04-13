@@ -217,6 +217,7 @@ namespace sdsl
 		size_type padding() const { return m_padding; }
 		static size_type max_size() { return level::d_values_type::max_size(); }
 		bool empty()const { return 0 == size(); }
+		array<level> const &levels() const { return m_levels; }
 		const_iterator begin() const { return const_iterator(this, 0); }
 		const_iterator end() const { return const_iterator(this, size()); }
 		const_iterator cbegin() const { return const_iterator(this, 0); }
@@ -317,6 +318,7 @@ namespace sdsl
 		
 		level &operator=(level const &other) &;
 		level &operator=(level &&other) &;
+		array<psi_k_support_type> const &partitions() const { return this->m_partitions; }
 		psi_k_support_type const &partition(typename array<psi_k_support_type>::size_type i) const { return this->m_partitions[i]; }
 		int_vector<0> const &d_values() const { return this->m_d_values; }
 		typename r1_type::size_type b_rank_1(typename r_bit_vector::size_type i) const { return m_b_r1_support.rank(i); } // rank in [0, i-1].
