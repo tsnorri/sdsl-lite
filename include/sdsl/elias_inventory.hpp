@@ -105,6 +105,7 @@ namespace sdsl {
 		int_vector<0> &values_low() const { return this->m_values_low; }
 		uint64_t raw_value(size_type i) const SDSL_HOT;
 		value_type operator[](size_type i) const SDSL_HOT;
+		value_type mask() const { return this->m_mask; }
 		
 		auto serialize(std::ostream& out, structure_tree_node *v = nullptr, std::string name = "") const -> size_type;
 		void load(std::istream& in);
