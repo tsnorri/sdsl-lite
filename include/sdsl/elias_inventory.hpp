@@ -102,7 +102,7 @@ namespace sdsl {
 		elias_inventory &operator=(elias_inventory const &other) &;
 		elias_inventory &operator=(elias_inventory &&other) &;
 		size_type size() const { return this->m_values_low.size(); }
-		int_vector<0> &values_low() const { return this->m_values_low; }
+		int_vector<0> const &values_low() const { return this->m_values_low; }
 		uint64_t raw_value(size_type i) const SDSL_HOT;
 		value_type operator[](size_type i) const SDSL_HOT;
 		value_type mask() const { return this->m_mask; }
