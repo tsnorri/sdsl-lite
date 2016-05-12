@@ -40,8 +40,8 @@ namespace sdsl
 	template<class t_csa, class t_bit_vector, class t_r_bit_vector, class t_s_bit_vector> class isa_lsw;
 	
 	//! Template argument container for sdsl::csa_rao.
-	/*! \tparam	t_levels			Number of levels. Zero indicates a value determined at run time.
-	 *  \tparam	t_partitions		Number of partitions. The size of the text has to be a multiple of
+	/*! \tparam	t_t					Number of levels. Zero indicates a value determined at run time.
+	 *  \tparam	t_l					Number of partitions. The size of the text has to be a multiple of
 									t_partitions^t_levels. Zero indicates a value determined at run time.
 	 *  \tparam	t_alphabet_strat	Policy for alphabet representation.
 	 *  \tparam t_r_bit_Vector		Type of bit vectors for which rank support is needed.
@@ -156,7 +156,7 @@ namespace sdsl
 		array<level> m_levels;
 		alphabet_type m_alphabet;
 		isa_type m_isa;
-		level_count_type m_t{0};			// FIXME: only needed in serialization?
+		level_count_type m_t{0};		// FIXME: only needed in serialization?
 		partition_count_type m_l{0};	// FIXME: only needed in serialization?
 		size_type m_padding{0};
 	

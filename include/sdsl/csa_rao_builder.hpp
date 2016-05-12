@@ -317,7 +317,7 @@ namespace sdsl
 		assert(psi_k); // psi_k shouldn't be zero here.
 
 		// Calculate j for L^k_j in Lemma 3, i.e. the value in base-σ of the
-		// k * m_l^current_level symbols that appear before SA[Ψ_k(i)].
+		// k * (csa.m_l)^current_level symbols that appear before SA[Ψ_k(i)].
 		uint64_t const l(builder.csa().m_l);
 		auto const pos(builder.sa_buf()[psi_k - 1]); // psi_k_fn returns 1-based indices.
 		auto decompressed_pos(builder.csa().decompress_sa(m_ll, pos));
