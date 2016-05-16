@@ -32,9 +32,10 @@ namespace sdsl
 		
 	protected:
 		r_bit_vector m_v_values;
-		// FIXME: check that these really aren't needed.
+		// The following are not needed since the set number needn't be determined.
+		// The item index is just the rank from m_v_values.
 		//int_vector<0> m_l_k_values;
-		//int_vector<64> m_c_k_values;
+		//int_vector<0> m_c_k_values;
 		elias_inventory<s_bit_vector> m_psi_k_values;
 		
 	public:
@@ -47,7 +48,7 @@ namespace sdsl
 		psi_k_support_base(
 			t_bit_vector const &v_values,				// Copied
 			int_vector<0> &l_k_values,					// Moved
-			int_vector<64> &c_k_values,					// Moved
+			int_vector<0> &c_k_values,					// Moved
 			elias_inventory<s_bit_vector> &psi_k_values	// Moved
 		):
 			m_v_values(v_values),
@@ -59,9 +60,9 @@ namespace sdsl
 	};
 	
 	
-	//! A class for providing compressed Ψ_k support as proposed by S. Srinivasa Rao.
+	//! A class for providing compressed Ψ^k support as proposed by S. Srinivasa Rao.
 	/*! Rao's CSA is a generalization of the CSA proposed by R. Grossi and J. S. Vitter.
-	 *  \tparam t_r_bit_Vector		Type of bit vectors for which rank support is needed.
+	 *  \tparam t_r_bit_vector		Type of bit vectors for which rank support is needed.
 	 *  \tparam t_s_bit_vector		Type of bit vectors for which select support is needed.
 	 *  \sa sdsl::psi_k_support_builder
 	 *  
@@ -89,7 +90,7 @@ namespace sdsl
 		psi_k_support(
 			bit_vector const &v_values,					// Copied
 			int_vector<0> &l_k_values,					// Moved
-			int_vector<64> &c_k_values,					// Moved
+			int_vector<0> &c_k_values,					// Moved
 			elias_inventory<s_bit_vector> &psi_k_values	// Moved
 		):
 			base_class::psi_k_support_base(v_values, l_k_values, c_k_values, psi_k_values),
