@@ -53,7 +53,7 @@ namespace sdsl
 	
 	
 	//! A class for the Inverse Suffix Array (ISA) proposed by T-W. Lam, W-K. Sung and S-S. Wong.
-	/*! For use with CSAs that provide the Ψ_k function.
+	/*! For use with CSAs that provide the Ψ^k function.
 	 *  \tparam	t_csa	CSA class.
 	 *  \sa sdsl::csa_rao
 	 *  
@@ -101,7 +101,7 @@ namespace sdsl
 		};
 		
 	protected:
-		t_csa const &m_csa;		// Pointer to the CSA that provides Ψ_k function.
+		t_csa const &m_csa;		// Pointer to the CSA that provides Ψ^k function.
 		
 	public:
 		isa_lsw() = delete; // A CSA is needed.
@@ -197,7 +197,7 @@ namespace sdsl
 	
 	template<class t_csa, class t_bit_vector, class t_r_bit_vector, class t_s_bit_vector>
 	isa_lsw<t_csa, t_bit_vector, t_r_bit_vector, t_s_bit_vector>::isa_lsw(
-		t_csa const &csa, csa_rao_builder<t_csa> const &builder, cache_config& config
+		t_csa const &csa, csa_rao_builder<t_csa> const &builder, cache_config &config
 	):
 		isa_lsw(csa)
 	{
@@ -225,6 +225,7 @@ namespace sdsl
 			auto const isa_size(1 + uint64_t(std::floor(double(n) / this->m_l)));
 			decltype(this->m_isa) isa_tmp(isa_size, 0, util::log2_ceil(1 + max_val));
 			
+			// Create a sample of the inverse suffix array (Lemma 7).
 			for (uint64_t i(0); i < n; ++i)
 			{
 				auto const val(sa_buf[i]);
@@ -239,7 +240,7 @@ namespace sdsl
 		}
 
 		{
-			// Lemma 2.
+			// Compress the required Ψ^k values (Lemma 7 and 2).
 			isa_simple<decltype(sa_buf)> isa(config, sa_buf);
 			
 			this->m_psi_k_support.reserve(this->m_l - 1);
