@@ -30,7 +30,7 @@ namespace sdsl
 	 *  \tparam t_text_buf	Text buffer class.
 	 *  \tparam t_sa_buf	SA buffer class.
 	 *  \tparam t_alphabet	Policy for alphabet representation.
-	 *  \tparam t_psi_k_fn	A class that provides the Ψ_k values with the function call operator.
+	 *  \tparam t_psi_k_fn	A class that provides the Ψ^k values with the function call operator.
 	 *  \sa sdsa::psi_k_support
 	 *  
 	 *  \par Reference
@@ -210,7 +210,7 @@ namespace sdsl
 		int_vector<0> l_k_values(stored_count, 0);
 
 		// Cumulative sums of the counts of elements in the L^k lists, 1-based (3 (4.3)).
-		int_vector<64> c_k_values;
+		int_vector<64> c_k_values_tmp;
 		
 		// Contents of each L^k_j (Ψ_k) with the order of j (but not j itself) preserved.
 		// Temporary, we combine the values into psi_k_values.
@@ -251,6 +251,7 @@ namespace sdsl
 			}
 			
 #ifndef NDEBUG
+			// Verify that each L^k_j is sorted.
 			// l_k_j.first yields j, .second gives the list L^k_j.
 			for (auto const &l_k_j : l_map_tmp)
 			{
@@ -265,25 +266,19 @@ namespace sdsl
 			// XXX: this remapping is not in Rao's paper but should be obvious.
 			uint64_t i(0);
 			uint64_t ii(0);
-			text_range prev_j(m_text_buf);
 			uint64_t rep_j(0);
 			for (auto &l_k_j : l_map_tmp)
 			{
 				// l_k_j.first yields j, .second gives the list L^k_j.
 				auto const j_val(l_k_j.first);
-				
-				// Replace j_val.
-				if (prev_j != j_val)
-				{
-					prev_j = j_val;
-					++rep_j;
-				}
+				++rep_j;
 				
 				l_vec.emplace_back(std::move(l_k_j.second)); // l_k_j.second gives a vector of values of Ψ_k.
 				auto range(l_k_values_tmp.equal_range(j_val)); // Returns a range containing all elements with the given key in the container.
 				for (auto kv_it(range.first); kv_it != range.second; ++kv_it)
 				{
-					// kv_it->second gives the value of i. Consequtive indices are needed, though.
+					// kv_it->second gives the value of i. Consecutive indices are needed, though.
+					// (Since only those values of Ψ_k[i] are stored for which d[i] = k, see 3 (4.3).)
 					assert((rep_j - 1) <= l_k_values.max_value());
 					l_k_values[ii] = rep_j - 1; // rep_j starts from 1.
 					++ii;
@@ -297,17 +292,23 @@ namespace sdsl
 		}
 		
 		// (3 (4.3)) Create C_k. Use 1-based indexing for i.
-		c_k_values = int_vector<64>(1 + l_vec.size(), 0);
+		c_k_values_tmp = int_vector<64>(1 + l_vec.size(), 0);
 		
 		{
 			uint64_t sum(0);
 			for (uint64_t i(0), count(l_vec.size()); i < count; ++i)
 			{
 				sum += l_vec[i].size();
-				assert(sum <= c_k_values.max_value());
-				c_k_values[1 + i] = sum;
+				assert(sum <= c_k_values_tmp.max_value());
+				c_k_values_tmp[1 + i] = sum;
 			}
 		}
+		
+		// Use only the amount of bits needed for the cumulative sum.
+		assert(c_k_values_tmp.size());
+		int_vector<0> c_k_values(c_k_values_tmp.size(), 0, 1 + bits::hi(c_k_values_tmp[c_k_values_tmp.size() - 1]));
+		std::copy(c_k_values_tmp.cbegin(), c_k_values_tmp.cend(), c_k_values.begin());
+		assert(c_k_values_tmp[c_k_values_tmp.size() - 1] == c_k_values[c_k_values.size() - 1]);
 		
 		// (3 (4.4) and corollary 2) Compact representation of Ψ_k.
 		elias_inventory<typename t_psi_k_support::s_bit_vector> psi_k_values(l_vec, c_k_values);
