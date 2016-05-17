@@ -218,8 +218,8 @@ namespace sdsl
 			
 			// XXX only one bit vector for the z values (in psi_k_support) could be used by using the bit vector
 			// from Ψ^1 (as it doesn't have “gaps” caused by SA[i] + k > n. A single additional bit could be
-			// stored in the Elias inventory (instead of the whole bit vector) by storing the previous value in
-			// the place of each gap since it will not be accessed anyway.
+			// stored in the Elias inventory (instead of the whole bit vector in psi_k_support) by storing the
+			// previous value in the place of each gap since it will not be accessed anyway.
 			{
 				psi_k_support_type psi_k_support;
 				for (uint64_t k(1); k < m_l; ++k)
