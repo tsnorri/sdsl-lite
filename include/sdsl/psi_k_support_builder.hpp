@@ -105,7 +105,16 @@ namespace sdsl
 			uint32_t const partition,
 			t_delegate &delegate
 		);
+
 		
+		template <class t_psi_k_support, class t_delegate>
+		void build(
+			t_psi_k_support &psi_k_support,
+			bit_vector &v_values,
+			uint32_t const partition,
+			t_delegate &delegate
+		);
+
 		
 		class text_range
 		{
@@ -179,19 +188,24 @@ namespace sdsl
 	};
 		
 	
-	template<
-		class t_csa,
-		class t_text_buf,
-		class t_sa_buf,
-		class t_alphabet,
-		class t_psi_k_fn
-	>
-	template <
-		class t_psi_k_support,
-		class t_delegate
-	>
+	template<class t_csa, class t_text_buf, class t_sa_buf, class t_alphabet, class t_psi_k_fn>
+	template<class t_psi_k_support, class t_delegate>
 	void psi_k_support_builder<t_csa, t_text_buf, t_sa_buf, t_alphabet, t_psi_k_fn>::build(
-		t_psi_k_support &psi_k_support,
+		/* out */ t_psi_k_support &psi_k_support,
+		uint32_t const partition,
+		t_delegate &delegate
+	)
+	{
+		bit_vector dummy;
+		build(psi_k_support, dummy, partition, delegate);
+	}
+	
+	
+	template<class t_csa, class t_text_buf, class t_sa_buf, class t_alphabet, class t_psi_k_fn>
+	template<class t_psi_k_support, class t_delegate>
+	void psi_k_support_builder<t_csa, t_text_buf, t_sa_buf, t_alphabet, t_psi_k_fn>::build(
+		/* out */ t_psi_k_support &psi_k_support,
+		/* out */ bit_vector &v_values,
 		uint32_t const partition,
 		t_delegate &delegate
 	)
@@ -204,7 +218,7 @@ namespace sdsl
 		int_vector<0>::size_type const stored_count(delegate.stored_count(*this, partition));
 		
 		// (3 (4.1)) Create V_k. Use 0-based indexing for i.
-		bit_vector v_values(m_sa_buf.size(), 0);
+		bit_vector v_values_tmp(m_sa_buf.size(), 0);
 		
 		// The list number to which the jth element in the subsequence belongs to (3 (4.2)), 0-based.
 		int_vector<0> l_k_values(stored_count, 0);
@@ -239,7 +253,7 @@ namespace sdsl
 				bool const status(delegate.psi_k(*this, partition, i, psi_k_i, j));
 				if (status)
 				{
-					v_values[i] = 1;
+					v_values_tmp[i] = 1;
 					
 					// Insert Ψ_k(i) into L^k_j. The lists end up sorted (Lemma 3).
 					// Also store i into an inverted index.
@@ -313,18 +327,13 @@ namespace sdsl
 		// (3 (4.4) and corollary 2) Compact representation of Ψ_k.
 		elias_inventory<typename t_psi_k_support::s_bit_vector> psi_k_values(l_vec, c_k_values);
 		
-		t_psi_k_support tmp_support(v_values, l_k_values, c_k_values, psi_k_values);
-		psi_k_support = std::move(tmp_support);
+		t_psi_k_support psi_k_support_tmp(v_values_tmp, l_k_values, c_k_values, psi_k_values);
+		psi_k_support = std::move(psi_k_support_tmp);
+		v_values = std::move(v_values_tmp); // t_psi_k_support constructor should copy v_values_tmp.
 	}
 	
 	
-	template<
-		class t_csa,
-		class t_text_buf,
-		class t_sa_buf,
-		class t_alphabet,
-		class t_isa
-	>
+	template<class t_csa, class t_text_buf, class t_sa_buf, class t_alphabet, class t_isa>
 	auto construct_psi_k_support_builder(
 		t_csa const &csa,
 		t_text_buf &text_buf,

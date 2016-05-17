@@ -41,7 +41,7 @@ namespace sdsl
 	{
 	public:
 		typedef csa_rao_builder<t_csa_rao> builder_type;
-		typedef psi_k_support<
+		typedef psi_k_support_v<
 			typename t_csa_rao::spec_type::bit_vector,
 			typename t_csa_rao::spec_type::r_bit_vector,
 			typename t_csa_rao::spec_type::s_bit_vector
@@ -246,8 +246,12 @@ namespace sdsl
 		// set suitable values for t (m_t) and l (m_l).
 		
 		if (0 == m_csa.m_t)
-			m_csa.m_t = 1;
-		
+		{
+			// Choose t = 2 ⇔ ε = 1/2 to get O(n \sqrt{\log n} \log σ) time complexity
+			// (if the following branch is also taken) as suggested by Lam et al. (Lemma 7)
+			m_csa.m_t = 2;
+		}
+
 		if (0 == m_csa.m_l)
 		{
 			// Section 3.2, choose l = (log₂n)^(1/(t + 1)).
@@ -278,6 +282,8 @@ namespace sdsl
 		typename t_csa_rao::template array<typename t_csa_rao::level> levels;
 		levels.reserve(m_csa.m_t);
 		m_csa.m_levels = std::move(levels);
+		
+		std::cerr << "*** csa_rao: n = " << n << ", using l = " << m_csa.m_l << ", t = " << m_csa.m_t << ", padding = " << m_csa.m_padding << "." << std::endl;
 	}
 	
 	

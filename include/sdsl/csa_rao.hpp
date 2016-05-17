@@ -122,7 +122,7 @@ namespace sdsl
 		typedef csa_rao_builder<csa_type>													builder_type;
 		typedef typename std::remove_const<decltype(t_spec::s_t)>::type						level_count_type;
 		typedef typename std::remove_const<decltype(t_spec::s_l)>::type						partition_count_type;
-		typedef psi_k_support<
+		typedef psi_k_support_v<
 			typename t_spec::bit_vector,
 			typename t_spec::r_bit_vector,
 			typename t_spec::s_bit_vector

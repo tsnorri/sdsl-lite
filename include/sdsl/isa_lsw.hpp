@@ -28,30 +28,6 @@
 
 namespace sdsl
 {
-	template<class t_bit_vector, class t_r_bit_vector, class t_s_bit_vector>
-	class isa_lsw_base
-	{
-	public:
-		typedef t_r_bit_vector								r_bit_vector;
-		typedef t_s_bit_vector								s_bit_vector;
-		typedef psi_k_support<
-			t_bit_vector, r_bit_vector, s_bit_vector
-		> psi_k_support_type;
-		
-	protected:
-		int_vector<0> m_isa;
-		std::vector<psi_k_support_type> m_psi_k_support;
-		uint64_t m_l{0};
-		
-	public:
-		isa_lsw_base() = default;
-		isa_lsw_base(isa_lsw_base const &) = default;
-		isa_lsw_base(isa_lsw_base &&) = default;
-		isa_lsw_base &operator=(isa_lsw_base const &) & = default;
-		isa_lsw_base &operator=(isa_lsw_base &&) & = default;
-	};
-	
-	
 	//! A class for the Inverse Suffix Array (ISA) proposed by T-W. Lam, W-K. Sung and S-S. Wong.
 	/*! For use with CSAs that provide the Ψ^k function.
 	 *  \tparam	t_csa	CSA class.
@@ -64,7 +40,7 @@ namespace sdsl
 	 */
 	// TODO: verify time and space complexity.
 	template<class t_csa, class t_bit_vector, class t_r_bit_vector, class t_s_bit_vector>
-	class isa_lsw : public isa_lsw_base<t_bit_vector, t_r_bit_vector, t_s_bit_vector>
+	class isa_lsw
 	{
 	public:
 		typedef isa_lsw											isa_type;
@@ -72,13 +48,13 @@ namespace sdsl
 		typedef typename t_csa::value_type						value_type;
 		typedef typename t_csa::size_type						size_type;
 		typedef typename t_csa::difference_type					difference_type;
-		
-		typedef isa_lsw_base<
-			t_bit_vector, t_r_bit_vector, t_s_bit_vector
-		> base_class;
-		typedef typename base_class::r_bit_vector				r_bit_vector;
-		typedef typename base_class::s_bit_vector				s_bit_vector;
-		typedef typename base_class::psi_k_support_type			psi_k_support_type;
+		typedef t_r_bit_vector									r_bit_vector;
+		typedef t_s_bit_vector									s_bit_vector;
+		typedef psi_k_support_v<
+			bit_vector,
+			r_bit_vector,
+			s_bit_vector
+		>														psi_k_support_type;
 	
 	protected:
 		template <class t_builder, class t_sa_buf>
@@ -101,7 +77,10 @@ namespace sdsl
 		};
 		
 	protected:
-		t_csa const &m_csa;		// Pointer to the CSA that provides Ψ^k function.
+		int_vector<0>					m_isa;
+		std::vector<psi_k_support_type>	m_psi_k_support;
+		uint64_t						m_l{0};
+		t_csa const						*m_csa;		// Pointer to the CSA that provides Ψ^k function.
 		
 	public:
 		isa_lsw() = delete; // A CSA is needed.
@@ -109,25 +88,14 @@ namespace sdsl
 		isa_lsw(t_csa const &csa, csa_rao_builder<t_csa> const &builder, cache_config& config);
 	
 		isa_lsw(t_csa const &csa):
-			base_class::isa_lsw_base(),
-			m_csa(csa)
+			m_csa(&csa)
 		{
 		}
 		
-		isa_lsw(isa_type const &other):
-			base_class::isa_lsw_base(other),
-			m_csa(other.m_csa)
-		{
-		}
-		
-		isa_lsw(isa_type &&other):
-			base_class::isa_lsw_base(std::move(other)),
-			m_csa(other.m_csa)
-		{
-		}
-		
-		isa_type &operator=(isa_type const &other) &;
-		isa_type &operator=(isa_type &&other) &;
+		isa_lsw(isa_lsw const &) = default;
+		isa_lsw(isa_lsw &&) = default;
+		isa_lsw &operator=(isa_lsw const &) & = default;
+		isa_lsw &operator=(isa_lsw &&) & = default;
 		
 		// i is the value from isa.
 		uint64_t psi_k(uint64_t k, uint64_t i) const;
@@ -135,10 +103,10 @@ namespace sdsl
 		value_type operator[](size_type i) const SDSL_HOT;
 	
 		//! Returns the size of the ISA.
-		size_type size() const { return m_csa.size(); }
+		size_type size() const { return m_csa->size(); }
 	
 		//! Returns if the ISA is empty.
-		size_type empty() const { return m_csa.empty(); }
+		size_type empty() const { return m_csa->empty(); }
 	
 		//! Returns a const_iterator to the first element.
 		const_iterator begin() const { return const_iterator(this, 0); }
@@ -209,7 +177,7 @@ namespace sdsl
 		{
 			auto const log_n(util::log2_ceil(n));
 			uint64_t const l(std::floor(std::sqrt(log_n)));
-			this->m_l = std::max(uint64_t(1), l);
+			m_l = std::max(uint64_t(1), l);
 		}
 
 		{
@@ -218,60 +186,49 @@ namespace sdsl
 			for (uint64_t i(0); i < n; ++i)
 			{
 				auto const val(sa_buf[i]);
-				if (0 == val % this->m_l)
+				if (0 == val % m_l)
 					max_val = std::max(max_val, i);
 			}
 			
-			auto const isa_size(1 + uint64_t(std::floor(double(n) / this->m_l)));
-			decltype(this->m_isa) isa_tmp(isa_size, 0, util::log2_ceil(1 + max_val));
+			auto const isa_size(1 + uint64_t(std::floor(double(n) / m_l)));
+			decltype(m_isa) isa_tmp(isa_size, 0, util::log2_ceil(1 + max_val));
 			
 			// Create a sample of the inverse suffix array (Lemma 7).
 			for (uint64_t i(0); i < n; ++i)
 			{
 				auto const val(sa_buf[i]);
-				if (0 == val % this->m_l)
+				if (0 == val % m_l)
 				{
 					assert(i <= isa_tmp.max_value());
-					isa_tmp[val / this->m_l] = i;
+					isa_tmp[val / m_l] = i;
 				}
 			}
 			
-			this->m_isa = std::move(isa_tmp);
+			m_isa = std::move(isa_tmp);
 		}
 
 		{
 			// Compress the required Ψ^k values (Lemma 7 and 2).
 			isa_simple<decltype(sa_buf)> isa(config, sa_buf);
 			
-			this->m_psi_k_support.reserve(this->m_l - 1);
-			auto builder(construct_psi_k_support_builder(m_csa, text_buf, sa_buf, m_csa.m_alphabet, isa));
+			m_psi_k_support.reserve(m_l - 1);
+			auto builder(construct_psi_k_support_builder(*m_csa, text_buf, sa_buf, m_csa->m_alphabet, isa));
 			
-			psi_k_support_builder_delegate<decltype(builder), decltype(sa_buf)> delegate(this->m_l);
-			for (uint64_t k(1); k < this->m_l; ++k)
+			psi_k_support_builder_delegate<decltype(builder), decltype(sa_buf)> delegate(m_l);
+			
+			// XXX only one bit vector for the z values (in psi_k_support) could be used by using the bit vector
+			// from Ψ^1 (as it doesn't have “gaps” caused by SA[i] + k > n. A single additional bit could be
+			// stored in the Elias inventory (instead of the whole bit vector) by storing the previous value in
+			// the place of each gap since it will not be accessed anyway.
 			{
 				psi_k_support_type psi_k_support;
-				builder.build(psi_k_support, k, delegate);
-				this->m_psi_k_support.emplace_back(std::move(psi_k_support));
+				for (uint64_t k(1); k < m_l; ++k)
+				{
+					builder.build(psi_k_support, k, delegate);
+					m_psi_k_support.emplace_back(std::move(psi_k_support));
+				}
 			}
 		}
-	}
-	
-	
-	template<class t_csa, class t_bit_vector, class t_r_bit_vector, class t_s_bit_vector>
-	auto isa_lsw<t_csa, t_bit_vector, t_r_bit_vector, t_s_bit_vector>::operator=(isa_type const &other) & -> isa_type &
-	{
-		// m_csa must have already been set since it needs to be given in the constructor.
-		base_class::operator=(other);
-		return *this;
-	}
-	
-	
-	template<class t_csa, class t_bit_vector, class t_r_bit_vector, class t_s_bit_vector>
-	auto isa_lsw<t_csa, t_bit_vector, t_r_bit_vector, t_s_bit_vector>::operator=(isa_type &&other) & -> isa_type &
-	{
-		// m_csa must have already been set since it needs to be given in the constructor.
-		base_class::operator=(std::move(other));
-		return *this;
 	}
 	
 	
@@ -282,8 +239,8 @@ namespace sdsl
 		if (k == 0)
 			return i;
 		
-		psi_k_support_type const &partition(this->m_psi_k_support[k - 1]);
-		auto retval(partition[i]);
+		psi_k_support_type const &partition(m_psi_k_support[k - 1]);
+		auto const retval(partition[i]);
 		return retval;
 	}
 	
@@ -291,12 +248,12 @@ namespace sdsl
 	template<class t_csa, class t_bit_vector, class t_r_bit_vector, class t_s_bit_vector>
 	auto isa_lsw<t_csa, t_bit_vector, t_r_bit_vector, t_s_bit_vector>::operator[](size_type i) const -> value_type
 	{
-		size_type const y(i / this->m_l);
-		size_type const yl(y * this->m_l);
+		size_type const y(i / m_l);
+		size_type const yl(y * m_l);
 		size_type const k(i - yl);
-		value_type const z(this->m_isa[y]);
+		value_type const z(m_isa[y]);
 		value_type const psi_val(psi_k(k, z));
-		value_type const retval(psi_val - m_csa.padding());
+		value_type const retval(psi_val - m_csa->padding());
 		return retval;
 	}
 	
@@ -306,14 +263,14 @@ namespace sdsl
 	{
 		structure_tree_node *child(structure_tree::add_child(v, name, util::class_name(*this)));
 		size_type written_bytes(0);
-		auto psi_k_count(this->m_psi_k_support.size());
+		auto psi_k_count(m_psi_k_support.size());
 
-		written_bytes += this->m_isa.serialize(out, child, "m_isa");
-		written_bytes += write_member(this->m_l, out, child, "m_l");
+		written_bytes += m_isa.serialize(out, child, "isa");
+		written_bytes += write_member(m_l, out, child, "l");
 		written_bytes += write_member(psi_k_count, out, child, "psi_k_count");
 		
-		typename decltype(this->m_psi_k_support)::size_type i(1);
-		for (auto it(this->m_psi_k_support.cbegin()), end(this->m_psi_k_support.cend()); it != end; ++it)
+		typename decltype(m_psi_k_support)::size_type i(1);
+		for (auto it(m_psi_k_support.cbegin()), end(m_psi_k_support.cend()); it != end; ++it)
 		{
 			written_bytes += it->serialize(out, child, "psi_k_" + std::to_string(i));
 			++i;
@@ -327,16 +284,16 @@ namespace sdsl
 	template<class t_csa, class t_bit_vector, class t_r_bit_vector, class t_s_bit_vector>
 	void isa_lsw<t_csa, t_bit_vector, t_r_bit_vector, t_s_bit_vector>::load(std::istream& in)
 	{
-		this->m_isa.load(in);
+		m_isa.load(in);
 		
-		read_member(this->m_l, in);
+		read_member(m_l, in);
 		
-		typename decltype(this->m_psi_k_support)::size_type psi_k_count(0);
+		typename decltype(m_psi_k_support)::size_type psi_k_count(0);
 		read_member(psi_k_count, in);
 		
-		this->m_psi_k_support.resize(psi_k_count);
+		m_psi_k_support.resize(psi_k_count);
 		for (decltype(psi_k_count) i(0); i < psi_k_count; ++i)
-			this->m_psi_k_support[i].load(in);
+			m_psi_k_support[i].load(in);
 	}
 }
 
