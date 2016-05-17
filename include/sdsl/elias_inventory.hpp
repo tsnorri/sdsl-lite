@@ -160,13 +160,24 @@ namespace sdsl {
 		decltype(this->m_mask) max(0);
 		size_type const total_count(ck[ck.size() - 1]);
 		
+#ifndef NDEBUG
+		{
+			// Verify that each list/set is sorted.
+			for (auto const &list : vec)
+			{
+				auto begin(list.cbegin()), end(list.cend()), it(std::is_sorted_until(begin, end));
+				assert (end == it);
+			}
+		}
+#endif
+		
 		{
 			decltype(max) max_tmp(0);
 			// Find a value greater than any of the stored.
 			for (size_type j(0), set_count(vec.size()); j < set_count; ++j)
 			{
-				for (size_type i(0), count(vec[j].size()); i < count; ++i)
-					max_tmp = std::max<decltype(max_tmp)>(vec[j][i], max_tmp);
+				auto const count(vec[j]).size();
+				max_tmp = std::max<decltype(max_tmp)>(vec[j][count - 1], max_tmp);
 			}
 			++max_tmp;
 			max = util::upper_power_of_2(max_tmp);
@@ -178,11 +189,11 @@ namespace sdsl {
 		value_type max_sum(0);
 		for (size_type j(0), set_count(vec.size()); j < set_count; ++j)
 		{
+			auto const pad(j * max);
 			for (size_type i(0), count(vec[j].size()); i < count; ++i)
 			{
 				// ck[j] is the cumulative sum of the counts of the items in the previous lists.
 				auto const current_val(vec[j][i]);
-				auto const pad(j * max);
 				auto const scaled_val(pad | current_val);
 				assert(0 == (pad & current_val));
 				assert((0 == j) || (((j - 1) * max) | current_val) < scaled_val);
@@ -245,11 +256,11 @@ namespace sdsl {
 		structure_tree_node *child(structure_tree::add_child(v, name, util::class_name(*this)));
 		size_type written_bytes(0);
 		
-		written_bytes += this->m_values_high.serialize(out, child, "m_values_high");
-		written_bytes += this->m_values_low.serialize(out, child, "m_values_low");
-		written_bytes += write_member(this->m_mask, out, child, "m_mask");
-		written_bytes += write_member(this->m_low_bits, out, child, "m_low_bits");
-		written_bytes += m_values_high_s1_support.serialize(out, child, "m_values_high_s1_support");
+		written_bytes += this->m_values_high.serialize(out, child, "values_high");
+		written_bytes += this->m_values_low.serialize(out, child, "values_low");
+		written_bytes += write_member(this->m_mask, out, child, "mask");
+		written_bytes += write_member(this->m_low_bits, out, child, "low_bits");
+		written_bytes += m_values_high_s1_support.serialize(out, child, "values_high_s1_support");
 	
 		structure_tree::add_size(child, written_bytes);
 		return written_bytes;
