@@ -176,7 +176,7 @@ namespace sdsl {
 			// Find a value greater than any of the stored.
 			for (size_type j(0), set_count(vec.size()); j < set_count; ++j)
 			{
-				auto const count(vec[j]).size();
+				auto const count(vec[j].size());
 				max_tmp = std::max<decltype(max_tmp)>(vec[j][count - 1], max_tmp);
 			}
 			++max_tmp;
