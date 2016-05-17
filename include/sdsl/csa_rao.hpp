@@ -362,9 +362,9 @@ namespace sdsl
 			++i;
 		}
 		
-		written_bytes += this->m_b_values.serialize(out, child, "m_b_values");
-		written_bytes += this->m_d_values.serialize(out, child, "m_d_values");
-		written_bytes += m_b_r1_support.serialize(out, child, "m_b_r1_support");
+		written_bytes += this->m_b_values.serialize(out, child, "b_values");
+		written_bytes += this->m_d_values.serialize(out, child, "d_values");
+		written_bytes += m_b_r1_support.serialize(out, child, "b_r1_support");
 		
 		structure_tree::add_size(child, written_bytes);
 		return written_bytes;
@@ -508,11 +508,11 @@ namespace sdsl
 		structure_tree_node *child(structure_tree::add_child(v, name, util::class_name(*this)));
 		size_type written_bytes(0);
 		
-		written_bytes += m_sa.serialize(out, child, "m_sa");
-		written_bytes += m_alphabet.serialize(out, child, "m_alphabet");
-		written_bytes += write_member(m_t, out, child, "m_t");
-		written_bytes += write_member(m_l, out, child, "m_l");
-		written_bytes += write_member(m_padding, out, child, "m_padding");
+		written_bytes += m_sa.serialize(out, child, "sa");
+		written_bytes += m_alphabet.serialize(out, child, "alphabet");
+		written_bytes += write_member(m_t, out, child, "t");
+		written_bytes += write_member(m_l, out, child, "l");
+		written_bytes += write_member(m_padding, out, child, "padding");
 		
 		level_count_type i(1);
 		assert(m_levels.size() == m_t);
