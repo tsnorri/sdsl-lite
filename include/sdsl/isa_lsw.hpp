@@ -42,6 +42,8 @@ namespace sdsl
 	template<class t_csa, class t_bit_vector, class t_r_bit_vector, class t_s_bit_vector>
 	class isa_lsw
 	{
+		friend t_csa;
+		
 	public:
 		typedef isa_lsw											isa_type;
 		typedef random_access_const_iterator<isa_type>			const_iterator;
@@ -80,7 +82,7 @@ namespace sdsl
 		int_vector<0>					m_isa;
 		std::vector<psi_k_support_type>	m_psi_k_support;
 		uint64_t						m_l{0};
-		t_csa const						*m_csa;		// Pointer to the CSA that provides Ψ^k function.
+		t_csa const						*m_csa{nullptr};		// Pointer to the CSA that provides Ψ^k function.
 		
 	public:
 		isa_lsw() = delete; // A CSA is needed.

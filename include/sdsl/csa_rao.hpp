@@ -155,7 +155,7 @@ namespace sdsl
 		int_vector<0> m_sa; // The most recent (in terms of level) suffix array, 0-based indices. // FIXME: really <0>? Check the initializer that it actually chooses the smallest type possible.
 		array<level> m_levels;
 		alphabet_type m_alphabet;
-		isa_type m_isa;
+		isa_type m_isa{*this};
 		level_count_type m_t{0};		// FIXME: only needed in serialization?
 		partition_count_type m_l{0};	// FIXME: only needed in serialization?
 		size_type m_padding{0};
@@ -232,7 +232,7 @@ namespace sdsl
 		void load(std::istream &in);
 		
 		void swap(csa_type &other) { using std::swap; swap(other, *this); }
-		void swap(csa_type &&other) { swap(other); }
+		void swap(csa_type &&other) { *this = std::move(other); }
 		
 		partition_count_type partition_count() const { return m_l; }
 		level_count_type level_count() const { return m_t; }
@@ -407,6 +407,8 @@ namespace sdsl
 		m_t = other.m_t;
 		m_l = other.m_l;
 		m_padding = other.m_padding;
+		
+		m_isa.m_csa = this;
 	}
 	
 	
@@ -420,6 +422,8 @@ namespace sdsl
 		m_t = std::move(other.m_t);
 		m_l = std::move(other.m_l);
 		m_padding = std::move(other.m_padding);
+
+		m_isa.m_csa = this;
 	}
 	
 	
