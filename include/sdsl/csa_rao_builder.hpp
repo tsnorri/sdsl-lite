@@ -71,6 +71,17 @@ namespace sdsl
 				typename t_builder::text_range &j
 			);
 		};
+		
+		
+		class check_output_statistics
+		{
+		protected:
+			bool m_should_output_statistics{};
+			
+		public:
+			check_output_statistics();
+			bool should_output_statistics() const { return m_should_output_statistics; }
+		};
 	
 	protected:
 		// Builder lifetime is shorter than any of the two below.
@@ -112,6 +123,8 @@ namespace sdsl
 		static void open_and_read_vector_size(
 			t_vec const &, isfstream &stream, std::string const &file_name, std::size_t &size, uint8_t &width
 		);
+		
+		static bool should_output_statistics();
 	};
 	
 
@@ -283,7 +296,14 @@ namespace sdsl
 		levels.reserve(m_csa.m_t);
 		m_csa.m_levels = std::move(levels);
 		
-		std::cerr << "*** csa_rao: n = " << n << ", using l = " << m_csa.m_l << ", t = " << m_csa.m_t << ", padding = " << m_csa.m_padding << "." << std::endl;
+		if (should_output_statistics())
+		{
+			std::cerr << "*** csa_rao: n = " << n
+			<< ", using l = " << m_csa.m_l
+			<< ", t = " << m_csa.m_t
+			<< ", padding = " << m_csa.m_padding
+			<< "." << std::endl;
+		}
 	}
 	
 	
@@ -402,6 +422,25 @@ namespace sdsl
 		std::copy(sa_ll.cbegin(), sa_ll.cend(), m_csa.m_sa.begin());
 		assert(m_csa.m_levels.size() == ll);
 		m_csa.m_levels.emplace_back(std::move(level));
+	}
+	
+	
+	template<class t_csa_rao>
+	csa_rao_builder<t_csa_rao>::check_output_statistics::check_output_statistics()
+	{
+		char const *should_output_str(getenv("SDSL_CSA_RAO_OUTPUT_STATISTICS"));
+		if (should_output_str && should_output_str[0] == '1' && should_output_str[1] == '\0')
+			m_should_output_statistics = true;
+	}
+	
+	
+	template<class t_csa_rao>
+	bool csa_rao_builder<t_csa_rao>::should_output_statistics()
+	{
+		// MT-safe in C++11 (as a result of static other threads wait for
+		// the construction to complete).
+		static check_output_statistics c;
+		return c.should_output_statistics();
 	}
 }
 
