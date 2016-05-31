@@ -113,7 +113,7 @@ class rank_support_v5 : public rank_support
         rank_support_v5& operator=(const rank_support_v5&) = default;
         rank_support_v5& operator=(rank_support_v5&&) = default;
 
-        size_type rank(size_type idx) const {
+        size_type rank(size_type idx) const override {
             assert(m_v != nullptr);
             assert(idx <= m_v->size());
             const uint64_t* p = m_basic_block.data()
@@ -133,14 +133,14 @@ class rank_support_v5 : public rank_support
             return result;
         }
 
-        inline size_type operator()(size_type idx)const {
+        inline size_type operator()(size_type idx)const override {
             return rank(idx);
         }
         size_type size()const {
             return m_v->size();
         }
 
-        size_type serialize(std::ostream& out, structure_tree_node* v=nullptr, std::string name="")const {
+        size_type serialize(std::ostream& out, structure_tree_node* v=nullptr, std::string name="")const override {
             size_type written_bytes = 0;
             structure_tree_node* child = structure_tree::add_child(v, name, util::class_name(*this));
             written_bytes += m_basic_block.serialize(out, child, "cumulative_counts");
@@ -148,13 +148,13 @@ class rank_support_v5 : public rank_support
             return written_bytes;
         }
 
-        void load(std::istream& in, const bit_vector* v=nullptr) {
+        void load(std::istream& in, const bit_vector* v=nullptr) override {
             set_vector(v);
             assert(m_v != nullptr); // supported bit vector should be known
             m_basic_block.load(in);
         }
 
-        void set_vector(const bit_vector* v=nullptr) {
+        void set_vector(const bit_vector* v=nullptr) override {
             m_v = v;
         }
         //! swap Operator

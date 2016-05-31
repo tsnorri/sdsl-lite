@@ -111,7 +111,7 @@ class rank_support_v : public rank_support
         rank_support_v& operator=(rank_support_v&&) = default;
 
 
-        size_type rank(size_type idx) const {
+        size_type rank(size_type idx) const override {
             assert(m_v != nullptr);
             assert(idx <= m_v->size());
             const uint64_t* p = m_basic_block.data()
@@ -123,7 +123,7 @@ class rank_support_v : public rank_support
                 return  *p + ((*(p+1)>>(63 - 9*((idx&0x1FF)>>6)))&0x1FF);
         }
 
-        inline size_type operator()(size_type idx)const {
+        inline size_type operator()(size_type idx)const override {
             return rank(idx);
         }
 
@@ -132,7 +132,7 @@ class rank_support_v : public rank_support
         }
 
         size_type serialize(std::ostream& out, structure_tree_node* v=nullptr,
-                            std::string name="")const {
+                            std::string name="")const override {
             size_type written_bytes = 0;
             structure_tree_node* child = structure_tree::add_child(v, name,
                                          util::class_name(*this));
@@ -142,12 +142,12 @@ class rank_support_v : public rank_support
             return written_bytes;
         }
 
-        void load(std::istream& in, const int_vector<1>* v=nullptr) {
+        void load(std::istream& in, const int_vector<1>* v=nullptr) override {
             set_vector(v);
             m_basic_block.load(in);
         }
 
-        void set_vector(const bit_vector* v=nullptr) {
+        void set_vector(const bit_vector* v=nullptr) override {
             m_v = v;
         }
 

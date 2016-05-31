@@ -305,13 +305,13 @@ double size_in_mega_bytes(const T& t);
 
 struct nullstream : std::ostream {
     struct nullbuf: std::streambuf {
-        int overflow(int c)
+        int overflow(int c) override
         {
             return traits_type::not_eof(c);
         }
         int xputc(int) { return 0; }
-        std::streamsize xsputn(char const*, std::streamsize n) { return n; }
-        int sync() { return 0; }
+        std::streamsize xsputn(char const*, std::streamsize n) override { return n; }
+        int sync() override { return 0; }
     } m_sbuf;
     nullstream(): std::ios(&m_sbuf), std::ostream(&m_sbuf), m_sbuf() {}
 };

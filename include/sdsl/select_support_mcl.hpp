@@ -93,12 +93,12 @@ class select_support_mcl : public select_support
         ~select_support_mcl();
         void init_slow(const bit_vector* v=nullptr);
         //! Select function
-        inline size_type select(size_type i) const;
+        inline size_type select(size_type i) const override;
         //! Alias for select(i).
-        inline size_type operator()(size_type i)const;
-        size_type serialize(std::ostream& out, structure_tree_node* v=nullptr, std::string name="")const;
-        void load(std::istream& in, const bit_vector* v=nullptr);
-        void set_vector(const bit_vector* v=nullptr);
+        inline size_type operator()(size_type i)const override;
+        size_type serialize(std::ostream& out, structure_tree_node* v=nullptr, std::string name="")const override;
+        void load(std::istream& in, const bit_vector* v=nullptr) override;
+        void set_vector(const bit_vector* v=nullptr) override;
         select_support_mcl<t_b, t_pat_len>& operator=(const select_support_mcl& ss);
         select_support_mcl<t_b, t_pat_len>& operator=(select_support_mcl&&);
         void swap(select_support_mcl<t_b, t_pat_len>& ss);
