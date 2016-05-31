@@ -236,7 +236,7 @@ namespace sdsl
 		
 		partition_count_type partition_count() const { return m_l; }
 		level_count_type level_count() const { return m_t; }
-		uint64_t decompress_sa(uint8_t ll, uint64_t val) const;
+		uint64_t decompress_sa(uint8_t ll, uint64_t val) const SDSL_PURE;
 	};
 	
 	

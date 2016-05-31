@@ -41,7 +41,7 @@ namespace sdsl
  * @ingroup select_support_group
  */
 template<uint8_t t_b=1, uint8_t t_pat_len=1>
-class select_support_scan : public select_support
+class select_support_scan final : public select_support
 {
     private:
         static_assert(t_b == 1u or t_b == 0u or t_b == 10u , "select_support_scan: bit pattern must be `0`,`1`,`10` or `01`");

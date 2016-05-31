@@ -170,7 +170,7 @@ template<>
 struct select_support_trait<1,1> {
     typedef select_support::size_type	size_type;
 
-    static size_type arg_cnt(const bit_vector& v)
+    static size_type arg_cnt(const bit_vector& v) SDSL_PURE
     {
         return util::cnt_one_bits(v);
     }
@@ -208,7 +208,7 @@ template<>
 struct select_support_trait<10,2> {
     typedef select_support::size_type	size_type;
 
-    static size_type arg_cnt(const bit_vector& v)
+    static size_type arg_cnt(const bit_vector& v) SDSL_PURE
     {
         return util::cnt_onezero_bits(v);
     }

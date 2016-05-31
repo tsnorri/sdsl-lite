@@ -56,6 +56,18 @@
 #define SDSL_HOT
 #endif
 
+#if defined(HAVE_ATTRIBUTE_PURE) && (!defined(SDSL_DEBUG))
+#define SDSL_PURE __attribute__ ((pure))
+#else
+#define SDSL_PURE
+#endif
+
+#if defined(HAVE_ATTRIBUTE_CONST) && (!defined(SDSL_DEBUG))
+#define SDSL_CONST __attribute__ ((const))
+#else
+#define SDSL_CONST
+#endif
+
 #ifndef MSVC_COMPILER
 #define SDSL_UNUSED __attribute__ ((unused))
 #include <sys/time.h>  // for struct timeval
@@ -141,13 +153,13 @@ void set_to_id(t_int_vec& v);
       \return The number of 1-bits in v.
  */
 template<class t_int_vec>
-typename t_int_vec::size_type cnt_one_bits(const t_int_vec& v);
+typename t_int_vec::size_type cnt_one_bits(const t_int_vec& v) SDSL_PURE;
 
 //! Number of occurrences of bit pattern `10` in v.
 /*! \sa getOneBits, getOneZeroBits
  */
 template<class t_int_vec>
-typename t_int_vec::size_type cnt_onezero_bits(const t_int_vec& v);
+typename t_int_vec::size_type cnt_onezero_bits(const t_int_vec& v) SDSL_PURE;
 
 //! Number of occurrences of bit pattern `01` in v.
 /*! \sa getOneBits, getZeroOneBits
@@ -379,27 +391,27 @@ struct is_regular : std::integral_constant< bool,
 //==================== Math functions ========================
 //! Floor of binary logarithm.
 template<typename T, typename = typename std::enable_if<std::is_unsigned<T>::value>::type>
-T log2_floor(T const val);
+T log2_floor(T const val) SDSL_CONST;
 
 //! Ceiling of binary logarithm.
 template<typename T, typename = typename std::enable_if<std::is_unsigned<T>::value>::type>
-T log2_ceil(T const val);
+T log2_ceil(T const val) SDSL_CONST;
 
 //! Power of 2 greater or equal to val.
 template<typename T, typename = typename std::enable_if<std::is_unsigned<T>::value>::type>
-T upper_power_of_2(T const val);
+T upper_power_of_2(T const val) SDSL_CONST;
 
 //! Integer power function.
-uint64_t ipow(uint64_t base, uint64_t exp);
+uint64_t ipow(uint64_t base, uint64_t exp) SDSL_CONST;
 
 #ifdef MODE_TI
 //! Integer power function.
-uint128_t ipow(uint128_t base, uint64_t exp);
+uint128_t ipow(uint128_t base, uint64_t exp) SDSL_CONST;
 #endif
 
 #ifdef MODE_OI
 //! Integer power function.
-uint256_t ipow(uint256_t base, uint64_t exp);
+uint256_t ipow(uint256_t base, uint64_t exp) SDSL_CONST;
 #endif
 
 //! Find the smallest divisor of n no smaller than m.

@@ -50,7 +50,7 @@ namespace sdsl
  * @ingroup rank_support_group
  */
 template<uint8_t t_b=1, uint8_t t_pat_len=1>
-class rank_support_v : public rank_support
+class rank_support_v final : public rank_support
 {
     private:
         static_assert(t_b == 1u or t_b == 0u or t_b == 10u or t_b == 11, "rank_support_v: bit pattern must be `0`,`1`,`10` or `01`");

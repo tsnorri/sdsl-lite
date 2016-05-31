@@ -440,7 +440,7 @@ class int_vector
             \returns The integer value of the binary string of length len starting at position idx.
             \sa setInt, getBit, setBit
         */
-        value_type get_int(size_type idx, const uint8_t len=64) const;
+        value_type get_int(size_type idx, const uint8_t len=64) const SDSL_PURE;
 
         //! Set the bits from position idx to idx+len-1 to the binary representation of integer x.
         /*! The bit at position idx represents the least significant bit(lsb), and the bit at
