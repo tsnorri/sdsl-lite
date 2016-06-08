@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2015 Tuukka Norri
+ Copyright (c) 2015-2016 Tuukka Norri
  This program is free software: you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
  the Free Software Foundation, either version 3 of the License, or
@@ -44,7 +44,7 @@ namespace sdsl
 	 *  \tparam	t_l					Number of partitions. The size of the text has to be a multiple of
 									t_partitions^t_levels. Zero indicates a value determined at run time.
 	 *  \tparam	t_alphabet_strat	Policy for alphabet representation.
-	 *  \tparam t_r_bit_Vector		Type of bit vectors for which rank support is needed.
+	 *  \tparam t_r_bit_vector		Type of bit vectors for which rank support is needed.
 	 *  \tparam t_s_bit_vector		Type of bit vectors for which select support is needed.
 	 *  \tparam t_rs_bit_vector		Type of bit vectors for which rank and select support are needed.
 	 *  \tparam t_isa				Class that implements the inverse suffix array.
@@ -227,7 +227,7 @@ namespace sdsl
 		uint64_t psi_k(uint64_t k, uint64_t i) const;
 		uint64_t psi_k(level_count_type lidx, uint64_t k, uint64_t i) const;
 	
-		size_type serialize(std::ostream &out, structure_tree_node *v = nullptr, std::string name = "") const;
+		std::size_t serialize(std::ostream &out, structure_tree_node *v = nullptr, std::string name = "") const;
 	
 		void load(std::istream &in);
 		
@@ -324,7 +324,7 @@ namespace sdsl
 		typename r1_type::size_type b_rank_1(typename r_bit_vector::size_type i) const { return m_b_r1_support.rank(i); } // rank in [0, i-1].
 		partition_count_type partition_count() const { return this->m_partitions.size(); }
 		
-		auto serialize(std::ostream& out, structure_tree_node *v = nullptr, std::string name = "") const -> size_type;
+		std::size_t serialize(std::ostream& out, structure_tree_node *v = nullptr, std::string name = "") const;
 		void load(std::istream& in, partition_count_type partition_count);
 	};
 	
@@ -350,10 +350,10 @@ namespace sdsl
 	
 	
 	template<class t_spec>
-	auto csa_rao<t_spec>::level::serialize(std::ostream &out, structure_tree_node *v, std::string name) const -> size_type
+	std::size_t csa_rao<t_spec>::level::serialize(std::ostream &out, structure_tree_node *v, std::string name) const
 	{
 		structure_tree_node *child(structure_tree::add_child(v, name, util::class_name(*this)));
-		size_type written_bytes(0);
+		std::size_t written_bytes(0);
 		
 		partition_count_type i(1);
 		for (auto const &partition : this->m_partitions)
@@ -507,10 +507,10 @@ namespace sdsl
 	
 	
 	template<class t_spec>
-	auto csa_rao<t_spec>::serialize(std::ostream &out, structure_tree_node *v, std::string name) const -> size_type
+	std::size_t csa_rao<t_spec>::serialize(std::ostream &out, structure_tree_node *v, std::string name) const
 	{
 		structure_tree_node *child(structure_tree::add_child(v, name, util::class_name(*this)));
-		size_type written_bytes(0);
+		std::size_t written_bytes(0);
 		
 		written_bytes += m_sa.serialize(out, child, "sa");
 		written_bytes += m_alphabet.serialize(out, child, "alphabet");
