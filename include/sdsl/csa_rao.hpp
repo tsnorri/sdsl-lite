@@ -227,7 +227,7 @@ namespace sdsl
 		uint64_t psi_k(uint64_t k, uint64_t i) const;
 		uint64_t psi_k(level_count_type lidx, uint64_t k, uint64_t i) const;
 	
-		std::size_t serialize(std::ostream &out, structure_tree_node *v = nullptr, std::string name = "") const;
+		size_type serialize(std::ostream &out, structure_tree_node *v = nullptr, std::string name = "") const;
 	
 		void load(std::istream &in);
 		
@@ -324,7 +324,7 @@ namespace sdsl
 		typename r1_type::size_type b_rank_1(typename r_bit_vector::size_type i) const { return m_b_r1_support.rank(i); } // rank in [0, i-1].
 		partition_count_type partition_count() const { return this->m_partitions.size(); }
 		
-		std::size_t serialize(std::ostream& out, structure_tree_node *v = nullptr, std::string name = "") const;
+		size_type serialize(std::ostream& out, structure_tree_node *v = nullptr, std::string name = "") const;
 		void load(std::istream& in, partition_count_type partition_count);
 	};
 	
@@ -350,7 +350,7 @@ namespace sdsl
 	
 	
 	template<class t_spec>
-	std::size_t csa_rao<t_spec>::level::serialize(std::ostream &out, structure_tree_node *v, std::string name) const
+	auto csa_rao<t_spec>::level::serialize(std::ostream &out, structure_tree_node *v, std::string name) const -> size_type
 	{
 		structure_tree_node *child(structure_tree::add_child(v, name, util::class_name(*this)));
 		std::size_t written_bytes(0);
@@ -507,7 +507,7 @@ namespace sdsl
 	
 	
 	template<class t_spec>
-	std::size_t csa_rao<t_spec>::serialize(std::ostream &out, structure_tree_node *v, std::string name) const
+	auto csa_rao<t_spec>::serialize(std::ostream &out, structure_tree_node *v, std::string name) const -> size_type
 	{
 		structure_tree_node *child(structure_tree::add_child(v, name, util::class_name(*this)));
 		std::size_t written_bytes(0);
