@@ -649,6 +649,7 @@ class int_vector_reference
          */
         int_vector_reference& operator=(value_type x)
         {
+            assert(! (x >> m_len));
             bits::write_int(m_word, x, m_offset, m_len);
             return *this;
         };
@@ -668,7 +669,10 @@ class int_vector_reference
         int_vector_reference& operator++()
         {
             value_type x = bits::read_int(m_word, m_offset, m_len);
-            bits::write_int(m_word, x+1, m_offset, m_len);
+            value_type y = x + 1;
+            assert(x < y);
+            assert(! (y >> m_len));
+            bits::write_int(m_word, y, m_offset, m_len);
             return *this;
         }
 
@@ -684,7 +688,10 @@ class int_vector_reference
         int_vector_reference& operator--()
         {
             value_type x = bits::read_int(m_word, m_offset, m_len);
-            bits::write_int(m_word, x-1, m_offset, m_len);
+            value_type y = x - 1;
+            assert(y < x);
+            // y has at most m_len bits set since it is less than x.
+            bits::write_int(m_word, y, m_offset, m_len);
             return *this;
         }
 
@@ -700,7 +707,10 @@ class int_vector_reference
         int_vector_reference& operator+=(const value_type x)
         {
             value_type w = bits::read_int(m_word, m_offset, m_len);
-            bits::write_int(m_word, w+x, m_offset, m_len);
+            value_type u = w + x;
+            assert((0 <= x && w <= u) || (x < 0 && u < w));  
+            assert(! (u >> m_len));
+            bits::write_int(m_word, u, m_offset, m_len);
             return *this;
         }
 
@@ -708,7 +718,10 @@ class int_vector_reference
         int_vector_reference& operator-=(const value_type x)
         {
             value_type w = bits::read_int(m_word, m_offset, m_len);
-            bits::write_int(m_word, w-x, m_offset, m_len);
+            value_type u = w - x;
+            assert((0 <= x && u <= w) || (x < 0 && w < u));
+            assert(! (u >> m_len));
+            bits::write_int(m_word, u, m_offset, m_len);
             return *this;
         }
 
