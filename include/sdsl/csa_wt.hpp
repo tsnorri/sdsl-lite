@@ -136,6 +136,7 @@ class csa_wt
         }
 
     public:
+        const alphabet_type&                          alphabet     = m_alphabet;
         const typename alphabet_type::char2comp_type& char2comp    = m_alphabet.char2comp;
         const typename alphabet_type::comp2char_type& comp2char    = m_alphabet.comp2char;
         const typename alphabet_type::C_type&         C            = m_alphabet.C;
