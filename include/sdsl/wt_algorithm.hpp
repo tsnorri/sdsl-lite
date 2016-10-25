@@ -8,10 +8,10 @@
 namespace sdsl
 {
 
-template<typename t_wt>
+template<typename t_wt, typename t_cs_vec, typename t_rank_c_vec>
 struct has_interval_symbols;
 
-template<typename t_wt, bool t_has_interval_symbols>
+template<typename t_wt, typename t_cs_vec, typename t_rank_c_vec, bool t_has_interval_symbols>
 struct _interval_symbols_wt;
 
 template<typename, typename T>
@@ -125,13 +125,13 @@ quantile_freq(const t_wt& wt, typename t_wt::size_type lb,
 }
 
 
-template<class t_wt>
+template<class t_wt, typename t_cs_vec, typename t_rank_c_vec>
 void
 _interval_symbols_rec(const t_wt& wt, range_type r,
                       typename t_wt::size_type& k,
-                      std::vector<typename t_wt::value_type>& cs,
-                      std::vector<typename t_wt::size_type>& rank_c_i,
-                      std::vector<typename t_wt::size_type>& rank_c_j,
+                      t_cs_vec& cs,
+                      t_rank_c_vec& rank_c_i,
+                      t_rank_c_vec& rank_c_j,
                       const typename t_wt::node_type& v)
 {
     using std::get;
@@ -153,14 +153,14 @@ _interval_symbols_rec(const t_wt& wt, range_type r,
     }
 }
 
-template<class t_wt>
+template<class t_wt, typename t_cs_vec, typename t_rank_c_vec>
 void
 _interval_symbols(const t_wt& wt, typename t_wt::size_type i,
                   typename t_wt::size_type j,
                   typename t_wt::size_type& k,
-                  std::vector<typename t_wt::value_type>& cs,
-                  std::vector<typename t_wt::size_type>& rank_c_i,
-                  std::vector<typename t_wt::size_type>& rank_c_j)
+                  t_cs_vec& cs,
+                  t_rank_c_vec& rank_c_i,
+                  t_rank_c_vec& rank_c_j)
 {
 
     assert(i <= j and j <= wt.size());
@@ -194,24 +194,26 @@ _interval_symbols(const t_wt& wt, typename t_wt::size_type i,
  *      \f$ \Order{\min{\sigma, k \log \sigma}} \f$
  *
  * \par Precondition
+ *      t_cs_vec can store t_wt::value_type
+ *      t_rank_c_vec can store t_wt::size_type
  *      \f$ i \leq j \leq size() \f$
  *      \f$ cs.size() \geq \sigma \f$
  *      \f$ rank_{c_i}.size() \geq \sigma \f$
  *      \f$ rank_{c_j}.size() \geq \sigma \f$
  */
-template<class t_wt>
+template<class t_wt, class t_cs_vec, class t_rank_c_vec>
 void
 interval_symbols(const t_wt& wt, typename t_wt::size_type i,
                  typename t_wt::size_type j,
                  typename t_wt::size_type& k,
-                 std::vector<typename t_wt::value_type>& cs,
-                 std::vector<typename t_wt::size_type>& rank_c_i,
-                 std::vector<typename t_wt::size_type>& rank_c_j)
+                 t_cs_vec& cs,
+                 t_rank_c_vec& rank_c_i,
+                 t_rank_c_vec& rank_c_j)
 {
     // check if wt has a built-in interval_symbols method
-    constexpr bool has_own = has_interval_symbols<t_wt>::value;
+    constexpr bool has_own = has_interval_symbols<t_wt, t_cs_vec, t_rank_c_vec>::value;
     if (has_own) {  // if yes, call it
-        _interval_symbols_wt<t_wt, has_own>::call(wt, i, j, k,
+        _interval_symbols_wt<t_wt, t_cs_vec, t_rank_c_vec, has_own>::call(wt, i, j, k,
                 cs, rank_c_i, rank_c_j);
     } else { // otherwise use generic implementation based on expand
         _interval_symbols(wt, i,j, k, cs, rank_c_i, rank_c_j);
@@ -224,7 +226,7 @@ interval_symbols(const t_wt& wt, typename t_wt::size_type i,
 // implement method interval_symbols
 // Adapted solution from jrok's proposal:
 // http://stackoverflow.com/questions/87372/check-if-a-class-has-a-member-function-of-a-given-signature
-template<typename t_wt>
+template<typename t_wt, typename t_cs_vec, typename t_rank_c_vec>
 struct has_interval_symbols {
     template<typename T>
     static constexpr auto check(T*)
@@ -234,9 +236,9 @@ struct has_interval_symbols {
                  std::declval<typename T::size_type>(),
                  std::declval<typename T::size_type>(),
                  std::declval<typename T::size_type&>(),
-                 std::declval<std::vector<typename T::value_type>&>(),
-                 std::declval<std::vector<typename T::size_type>&>(),
-                 std::declval<std::vector<typename T::size_type>&>()
+                 std::declval<t_cs_vec&>(),
+                 std::declval<t_rank_c_vec&>(),
+                 std::declval<t_rank_c_vec&>()
              )),
              void>::type {return std::true_type();}
              template<typename>
@@ -245,28 +247,30 @@ struct has_interval_symbols {
     static constexpr bool value = type::value;
 };
 
-template<typename t_wt, bool t_has_interval_symbols>
+template<typename t_wt, typename t_cs_vec, typename t_rank_c_vec, bool t_has_interval_symbols>
 struct _interval_symbols_wt {
     typedef typename t_wt::size_type  size_type;
     typedef typename t_wt::value_type value_type;
 
     static void call(const t_wt& wt, size_type i, size_type j, size_type& k,
-                     std::vector<value_type>& cs, std::vector<size_type>& rank_c_i,
-                     std::vector<size_type>& rank_c_j)
+                     t_cs_vec& cs,
+                     t_rank_c_vec& rank_c_i,
+                     t_rank_c_vec& rank_c_j)
     {
         wt.interval_symbols(i,j,k,cs,rank_c_i,rank_c_j);
     }
 };
 
 
-template<typename t_wt>
-struct _interval_symbols_wt<t_wt, false> {
+template<typename t_wt, typename t_cs_vec, typename t_rank_c_vec>
+struct _interval_symbols_wt<t_wt, t_cs_vec, t_rank_c_vec, false> {
     typedef typename t_wt::size_type  size_type;
     typedef typename t_wt::value_type value_type;
 
     static void call(const t_wt&, size_type, size_type, size_type&,
-                     std::vector<value_type>&, std::vector<size_type>&,
-                     std::vector<size_type>&)
+                     t_cs_vec&,
+                     t_rank_c_vec&,
+                     t_rank_c_vec&)
     {
     }
 };

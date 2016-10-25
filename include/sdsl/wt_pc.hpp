@@ -146,11 +146,13 @@ class wt_pc
         }
 
         // recursive internal version of the method interval_symbols
+        template <typename t_cs_vec, typename t_rank_c_vec>
         void
         _interval_symbols(size_type i, size_type j, size_type& k,
-                          std::vector<value_type>& cs,
-                          std::vector<size_type>& rank_c_i,
-                          std::vector<size_type>& rank_c_j, node_type v) const
+                          t_cs_vec& cs,
+                          t_rank_c_vec& rank_c_i,
+                          t_rank_c_vec& rank_c_j,
+                          node_type v) const
         {
             // invariant: j>i
             size_type i_new = (m_bv_rank(m_tree.bv_pos(v) + i)
@@ -477,11 +479,15 @@ class wt_pc
          *      \f$ rank_{c_i}.size() \geq \sigma \f$
          *      \f$ rank_{c_j}.size() \geq \sigma \f$
          */
+        template <typename t_cs_vec, typename t_rank_c_vec>
         void interval_symbols(size_type i, size_type j, size_type& k,
-                              std::vector<value_type>& cs,
-                              std::vector<size_type>& rank_c_i,
-                              std::vector<size_type>& rank_c_j) const
+                              t_cs_vec& cs,
+                              t_rank_c_vec& rank_c_i,
+                              t_rank_c_vec& rank_c_j) const
         {
+            // Use ADL.
+            using std::swap;
+
             assert(i <= j and j <= size());
             if (i==j) {
                 k = 0;
@@ -507,8 +513,8 @@ class wt_pc
                 } else {
                     k = 2;
                     if (lex_ordered and cs[0] > cs[1]) {
-                        std::swap(cs[0], cs[1]);
-                        std::swap(rank_c_i[0], rank_c_i[1]);
+                        swap(cs[0], cs[1]);
+                        swap(rank_c_i[0], rank_c_i[1]);
                     }
                     rank_c_j[0] = rank_c_i[0]+1;
                     rank_c_j[1] = rank_c_i[1]+1;
