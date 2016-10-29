@@ -338,7 +338,7 @@ class cst_sct3
         cst_sct3() {}
 
         //! Construct CST from cache config
-        cst_sct3(cache_config& cache, bool build_only_bps=false);
+        cst_sct3(cache_config& cache, bool skip_lcp=false, bool skip_csa=false);
 
         //! Copy constructor
         /*!
@@ -1143,7 +1143,7 @@ class cst_sct3
 
 
 template<class t_csa, class t_lcp, class t_bp_support, class t_bv, class t_rank, class t_sel>
-cst_sct3<t_csa, t_lcp, t_bp_support, t_bv, t_rank, t_sel>::cst_sct3(cache_config& config, bool build_only_bps)
+cst_sct3<t_csa, t_lcp, t_bp_support, t_bv, t_rank, t_sel>::cst_sct3(cache_config& config, bool skip_lcp, bool skip_csa)
 {
     {
         auto event = memory_monitor::event("bps-sct");
@@ -1160,13 +1160,13 @@ cst_sct3<t_csa, t_lcp, t_bp_support, t_bv, t_rank, t_sel>::cst_sct3(cache_config
         util::init_support(m_first_child_rank, &m_first_child);
         util::init_support(m_first_child_select, &m_first_child);
     }
-    if (!build_only_bps) {
+    if (!skip_lcp) {
         auto event = memory_monitor::event("clcp");
         cache_config tmp_config(false, config.dir, config.id, config.file_map);
         construct_lcp(m_lcp, *this, tmp_config);
         config.file_map = tmp_config.file_map;
     }
-    if (!build_only_bps) {
+    if (!skip_csa) {
         auto event = memory_monitor::event("load csa");
         load_from_cache(m_csa,std::string(conf::KEY_CSA)+"_"+util::class_to_hash(m_csa), config);
     }
