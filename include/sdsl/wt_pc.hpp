@@ -33,6 +33,73 @@
 //! Namespace for the succinct data structure library.
 namespace sdsl
 {
+    
+template<class t_wt>
+class construct_wt_sdsl
+{
+    protected:
+        t_wt *m_wt{nullptr};
+    
+    protected:
+        // insert a character into the wavelet tree, see construct method
+        void insert_char(typename t_wt::value_type old_chr, std::vector<uint64_t>& bv_node_pos,
+                         typename t_wt::size_type times, bit_vector& bv)
+        {
+            uint64_t p = m_wt->m_tree.bit_path(old_chr);
+            uint32_t path_len = p>>56;
+            typename t_wt::node_type v = m_wt->m_tree.root();
+            for (uint32_t l=0; l<path_len; ++l, p >>= 1) {
+                if (p&1) {
+                    bv.set_int(bv_node_pos[v], 0xFFFFFFFFFFFFFFFFULL,times);
+                }
+                bv_node_pos[v] += times;
+                v = m_wt->m_tree.child(v, p&1);
+            }
+        }
+
+    public:
+        construct_wt_sdsl(t_wt &wt):
+            m_wt(&wt)
+        {
+        }
+        
+        void construct(typename t_wt::size_type const size,
+                       int_vector_buffer<t_wt::tree_strat_type::int_width>&
+                       input_buf, bit_vector &temp_bv
+                      )
+        {
+            // Initializing starting position of wavelet tree nodes
+            std::vector<uint64_t> bv_node_pos(m_wt->m_tree.size(), 0);
+            for (typename t_wt::size_type v=0; v < m_wt->m_tree.size(); ++v) {
+                bv_node_pos[v] = m_wt->m_tree.bv_pos(v);
+            }
+            if (input_buf.size() < size) {
+                throw std::logic_error("Stream size is smaller than size!");
+                return;
+            }
+            typename t_wt::value_type old_chr = input_buf[0];
+            uint32_t times = 0;
+            for (typename t_wt::size_type i=0; i < m_wt->m_size; ++i) {
+                typename t_wt::value_type chr = input_buf[i];
+                if (chr != old_chr) {
+                    insert_char(old_chr, bv_node_pos, times, temp_bv);
+                    times = 1;
+                    old_chr = chr;
+                } else { // chr == old_chr
+                    ++times;
+                    if (times == 64) {
+                        insert_char(old_chr, bv_node_pos, times, temp_bv);
+                        times = 0;
+                    }
+                }
+            }
+            if (times > 0) {
+                insert_char(old_chr, bv_node_pos, times, temp_bv);
+            }
+            m_wt->m_bv = typename t_wt::bit_vector_type(std::move(temp_bv));
+        }
+};
+
 
 //! A prefix code-shaped wavelet.
 /*!
@@ -47,14 +114,18 @@ namespace sdsl
  *  @ingroup wt
  */
 template<class t_shape,
-         class t_bitvector   = bit_vector,
-         class t_rank        = typename t_bitvector::rank_1_type,
-         class t_select      = typename t_bitvector::select_1_type,
-         class t_select_zero = typename t_bitvector::select_0_type,
-         class t_tree_strat  = byte_tree<>
+         class t_bitvector                     = bit_vector,
+         class t_rank                          = typename t_bitvector::rank_1_type,
+         class t_select                        = typename t_bitvector::select_1_type,
+         class t_select_zero                   = typename t_bitvector::select_0_type,
+         class t_tree_strat                    = byte_tree<>,
+         template<class> class t_construct_wt  = construct_wt_sdsl
          >
 class wt_pc
 {
+    // XXX for now this only works with GCC.
+    template <class> friend class t_construct_wt;
+    
     public:
         typedef typename
         t_tree_strat::template type<wt_pc>            tree_strat_type;
@@ -77,7 +148,6 @@ class wt_pc
         using node_type = typename tree_strat_type::node_type;
 
     private:
-
 #ifdef WT_PC_CACHE
         mutable value_type m_last_access_answer;
         mutable size_type  m_last_access_i;
@@ -105,23 +175,6 @@ class wt_pc
             m_bv_select0.set_vector(&m_bv);
             m_tree          = wt.m_tree;
         }
-
-        // insert a character into the wavelet tree, see construct method
-        void insert_char(value_type old_chr, std::vector<uint64_t>& bv_node_pos,
-                         size_type times, bit_vector& bv)
-        {
-            uint64_t p = m_tree.bit_path(old_chr);
-            uint32_t path_len = p>>56;
-            node_type v = m_tree.root();
-            for (uint32_t l=0; l<path_len; ++l, p >>= 1) {
-                if (p&1) {
-                    bv.set_int(bv_node_pos[v], 0xFFFFFFFFFFFFFFFFULL,times);
-                }
-                bv_node_pos[v] += times;
-                v = m_tree.child(v, p&1);
-            }
-        }
-
 
 
         // calculates the tree shape returns the size of the WT bit vector
@@ -218,36 +271,9 @@ class wt_pc
             size_type tree_size = construct_tree_shape(C);
             // 4. Generate wavelet tree bit sequence m_bv
             bit_vector temp_bv(tree_size, 0);
+            t_construct_wt<wt_pc> cwt(*this);
+            cwt.construct(size, input_buf, temp_bv);
 
-            // Initializing starting position of wavelet tree nodes
-            std::vector<uint64_t> bv_node_pos(m_tree.size(), 0);
-            for (size_type v=0; v < m_tree.size(); ++v) {
-                bv_node_pos[v] = m_tree.bv_pos(v);
-            }
-            if (input_buf.size() < size) {
-                throw std::logic_error("Stream size is smaller than size!");
-                return;
-            }
-            value_type old_chr = input_buf[0];
-            uint32_t times = 0;
-            for (size_type i=0; i < m_size; ++i) {
-                value_type chr = input_buf[i];
-                if (chr != old_chr) {
-                    insert_char(old_chr, bv_node_pos, times, temp_bv);
-                    times = 1;
-                    old_chr = chr;
-                } else { // chr == old_chr
-                    ++times;
-                    if (times == 64) {
-                        insert_char(old_chr, bv_node_pos, times, temp_bv);
-                        times = 0;
-                    }
-                }
-            }
-            if (times > 0) {
-                insert_char(old_chr, bv_node_pos, times, temp_bv);
-            }
-            m_bv = bit_vector_type(std::move(temp_bv));
             // 5. Initialize rank and select data structures for m_bv
             construct_init_rank_select();
             // 6. Finish inner nodes by precalculating the bv_pos_rank values
