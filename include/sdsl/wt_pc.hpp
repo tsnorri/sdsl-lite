@@ -104,7 +104,8 @@ class construct_wt_sdsl
         static void construct(t_wt &wt,
                               int_vector_buffer<t_wt::tree_strat_type::int_width>& input_buf,
                               typename t_wt::size_type const size,
-                              bit_vector &temp_bv
+                              bit_vector &temp_bv,
+                              void *
                              )
         {
             construct_wt_sdsl cwt(wt);
@@ -269,8 +270,9 @@ class wt_pc
          * \par Time complexity
          *      \f$ \Order{n\log|\Sigma|}\f$, where \f$n=size\f$
          */
+        template <typename t_data>
         wt_pc(int_vector_buffer<tree_strat_type::int_width>& input_buf,
-              size_type size):m_size(size)
+              size_type size, t_data data):m_size(size)
         {
             if (0 == m_size)
                 return;
@@ -287,10 +289,13 @@ class wt_pc
             size_type tree_size = construct_tree_shape(C);
             // 4. Generate wavelet tree bit sequence m_bv
             bit_vector temp_bv(tree_size, 0);
-            t_construct_wt<wt_pc>::construct(*this, input_buf, size, temp_bv);
+            t_construct_wt<wt_pc>::construct(*this, input_buf, size, temp_bv, std::forward <t_data>(data));
         }
-        
-        
+    
+        wt_pc(int_vector_buffer<tree_strat_type::int_width>& input_buf,
+              size_type size): wt_pc(input_buf, size, nullptr) {}
+
+
         void finish_construct()
         {
             // 5. Initialize rank and select data structures for m_bv
