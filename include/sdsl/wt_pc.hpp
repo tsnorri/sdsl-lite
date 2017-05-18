@@ -56,16 +56,15 @@ class construct_wt_sdsl
                 v = m_wt->m_tree.child(v, p&1);
             }
         }
-
-    public:
+        
         construct_wt_sdsl(t_wt &wt):
             m_wt(&wt)
         {
         }
         
-        void construct(typename t_wt::size_type const size,
-                       int_vector_buffer<t_wt::tree_strat_type::int_width>&
-                       input_buf, bit_vector &temp_bv
+        void construct(int_vector_buffer<t_wt::tree_strat_type::int_width>& input_buf,
+                       typename t_wt::size_type const size,
+                       bit_vector &temp_bv
                       )
         {
             // Initializing starting position of wavelet tree nodes
@@ -97,6 +96,19 @@ class construct_wt_sdsl
                 insert_char(old_chr, bv_node_pos, times, temp_bv);
             }
             m_wt->m_bv = typename t_wt::bit_vector_type(std::move(temp_bv));
+            
+            m_wt->finish_construct();
+        }
+        
+    public:
+        static void construct(t_wt &wt,
+                              int_vector_buffer<t_wt::tree_strat_type::int_width>& input_buf,
+                              typename t_wt::size_type const size,
+                              bit_vector &temp_bv
+                             )
+        {
+            construct_wt_sdsl cwt(wt);
+            cwt.construct(input_buf, size, temp_bv);
         }
 };
 
@@ -124,7 +136,8 @@ template<class t_shape,
 class wt_pc
 {
     // XXX for now this only works with GCC.
-    template <class> friend class t_construct_wt;
+    template <class>
+    friend class t_construct_wt;
     
     public:
         typedef typename
@@ -161,7 +174,8 @@ class wt_pc
         select_1_type    m_bv_select1;   // select support for the wavelet tree bit vector
         select_0_type    m_bv_select0;
         tree_strat_type  m_tree;
-
+    
+    
         void copy(const wt_pc& wt)
         {
             m_size            = wt.m_size;
@@ -182,12 +196,14 @@ class wt_pc
         {
             // vector  for node of the tree
             std::vector<pc_node> temp_nodes; //(2*m_sigma-1);
+            
             shape_type::construct_tree(C, temp_nodes);
             // Convert code tree into BFS order in memory and
             // calculate bv_pos values
             size_type bv_size = 0;
             tree_strat_type temp_tree(temp_nodes, bv_size, this);
             m_tree.swap(temp_tree);
+            
             return bv_size;
         }
 
@@ -271,9 +287,12 @@ class wt_pc
             size_type tree_size = construct_tree_shape(C);
             // 4. Generate wavelet tree bit sequence m_bv
             bit_vector temp_bv(tree_size, 0);
-            t_construct_wt<wt_pc> cwt(*this);
-            cwt.construct(size, input_buf, temp_bv);
-
+            t_construct_wt<wt_pc>::construct(*this, input_buf, size, temp_bv);
+        }
+        
+        
+        void finish_construct()
+        {
             // 5. Initialize rank and select data structures for m_bv
             construct_init_rank_select();
             // 6. Finish inner nodes by precalculating the bv_pos_rank values
