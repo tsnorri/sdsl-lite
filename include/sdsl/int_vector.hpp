@@ -649,7 +649,6 @@ class int_vector_reference
          */
         int_vector_reference& operator=(value_type x)
         {
-            assert(! (x >> m_len));
             bits::write_int(m_word, x, m_offset, m_len);
             return *this;
         };
